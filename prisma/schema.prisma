@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+//things
+model Phone {
+  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  phoneName    String
+  buyerName    String
+  buyerNumber  String?
+  price        String
+  firstPrice   String
+  profit       String
+  fixedCut     String
+  updatedPrice String
+  type         String
+
+  environmentId String      @db.ObjectId
+  creatorId     String      @db.ObjectId
+  environment   Environment @relation(fields: [environmentId], references: [id])
+  creator       User        @relation(fields: [creatorId], references: [id])
+  isPaids       isPaid[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model isPaid {
+  id      String  @id @default(auto()) @map("_id") @db.ObjectId
+  isPaid  Boolean
+  phoneId String  @db.ObjectId
+  phone   Phone   @relation(fields: [phoneId], references: [id])
+}
+
+model Item {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  itemName String
+  price    String
+  type     String
+
+  environmentId String      @db.ObjectId
+  environment   Environment @relation(fields: [environmentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Environment
+model Environment {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  name          String         @unique
+  password      String // Password for joining the environment
+  ownerId       String         @db.ObjectId
+  owner         User           @relation("OwnerEnvironments", fields: [ownerId], references: [id])
+  collaborators Collaborator[]
+  phones        Phone[]
+  items         Item[]
+  accessEmails  AccessEmail[]
+}
+
+model Collaborator {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String      @db.ObjectId
+  environmentId String      @db.ObjectId
+  user          User        @relation(fields: [userId], references: [id])
+  environment   Environment @relation(fields: [environmentId], references: [id])
+  role          Role
+}
+
+model AccessEmail {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  environmentId String      @db.ObjectId
+  email         String      @unique
+  role          Role
+  environment   Environment @relation(fields: [environmentId], references: [id])
+}
+
+enum Role {
+  VIEWER
+  ADMIN
+}
+
+// user
+model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  environments   Environment[]  @relation("OwnerEnvironments")
+  collaborations Collaborator[]
+  phones         Phone[]
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
