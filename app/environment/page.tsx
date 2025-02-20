@@ -1,6 +1,5 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { CreateEnvironment } from './components/createEnvirnoment'
 import { AddCollaborator } from '../components/AddCollaborator'
 import { getEnvironmentById } from '../../backend/envirnoment'
 
@@ -25,7 +24,6 @@ export default function page() {
   return (
     <div className='max-w-5xl mx-auto mt-6 relative'>
       <div className="flex items-center gap-x-3 ">
-        <button className="p-2 border  hover:bg-blue-400 hover:text-white   rounded-md delay-100" onClick={() => { setIsOpen("env") }}>Create Environment</button>
         <button className="p-2 border  hover:bg-blue-400 hover:text-white rounded-md delay-100" onClick={() => { setIsOpen("add") }}>Add</button>
       </div>
 
@@ -45,7 +43,6 @@ export default function page() {
 
 
 
-      {isOpen === "env" && <div className="absolute top-0 left-1/2 transform -translate-x-1/2 bg-white z-30"><CreateEnvironment setIsOpen={setIsOpen} /></div>}
       {isOpen === "add" && <div className="absolute top-0 left-1/2 transform -translate-x-1/2 bg-white z-30"><AddCollaborator setIsOpen={setIsOpen} /></div>}
     </div>
   )
