@@ -30,10 +30,11 @@ model Phone {
 }
 
 model isPaid {
-  id      String  @id @default(auto()) @map("_id") @db.ObjectId
-  isPaid  Boolean
-  phoneId String  @db.ObjectId
-  phone   Phone   @relation(fields: [phoneId], references: [id])
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
+  isPaid   Boolean
+  position Int
+  phoneId  String  @db.ObjectId
+  phone    Phone   @relation(fields: [phoneId], references: [id])
 }
 
 model Item {

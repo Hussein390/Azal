@@ -2,24 +2,39 @@
 import React, { useEffect, useState } from 'react'
 import { AddCollaborator } from '../components/AddCollaborator'
 import { getEnvironmentById } from '../../backend/envirnoment'
+// import Image from 'next/image'
+
+// type collaboratorsProps = {
+//   role: string,
+//   user: {
+//     id: string,
+//     name: string,
+//     image: string
+//   }
+// }
 
 export default function page() {
   const [isOpen, setIsOpen] = useState<string | null>(null)
   const [envirnoment, setEnvironment] = useState<any>()
+  // const [collaborator, setCollaborator] = useState<any>()
 
   async function getEnvirnoment() {
     try {
       const EnvId = localStorage.getItem('envId');
       const envirnoment = await getEnvironmentById({ id: EnvId! });
       setEnvironment(envirnoment)
-      console.log(envirnoment)
     } catch (err: unknown) {
       if (err instanceof Error) console.log(err.message)
       else return;
     }
   }
   useEffect(() => {
-    getEnvirnoment()
+    async function runder() {
+      await getEnvirnoment()
+      // setCollaborator(await envirnoment!)
+    }
+    runder()
+    console.log(envirnoment)
   }, [])
   return (
     <div className='max-w-5xl mx-auto mt-6 relative'>
@@ -42,8 +57,13 @@ export default function page() {
       </div> : <p>No Environment</p>}
 
 
+      {/* <div className="p-3 rounded-md border mt-2 flex items-start justify-between">
+        <div className="">
+          <Image src={collaborator![0].user.image! || '/azal.png'} width={150} height={150} alt={collaborator![0].user.name! || "messing"} className='rounded-md shadow' />
 
-      {isOpen === "add" && <div className="absolute top-0 left-1/2 transform -translate-x-1/2 bg-white z-30"><AddCollaborator setIsOpen={setIsOpen} /></div>}
+        </div>
+      </div> */}
+      {isOpen === "add" && <div className="absolute top-0 left-1/2 transform -translate-x-1/2 bg-white z-30 border"><AddCollaborator setIsOpen={setIsOpen} /></div>}
     </div>
   )
 }

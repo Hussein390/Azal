@@ -278,7 +278,7 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
               </div>
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="framework">المالك</Label>
-                <Select value={phone.userId || 'husserin'} onValueChange={(value) => setPhone(prev => ({ ...prev, userId: value }))}>
+                <Select value={phone.userId} onValueChange={(value) => setPhone(prev => ({ ...prev, userId: value }))}>
                   <SelectTrigger id="framework">
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>

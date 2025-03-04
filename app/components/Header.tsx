@@ -6,7 +6,7 @@ import Search from "../environment/components/search"
 import { ItemsCreate } from "./itemsCreate"
 import { useRouter } from 'next/navigation'
 import { JoinEnvironment } from "./joinEvironment"
-import { getCollaborators } from "@/backend/envirnoment"
+import { getARole } from "@/backend/envirnoment"
 import { CreateEnvironment } from "../environment/components/createEnvirnoment"
 
 export default function Header() {
@@ -19,14 +19,13 @@ export default function Header() {
       console.error('Environment ID is missing!');
       return;
     }
-    const res = await getCollaborators(EnvId);
-    if (res instanceof Error) return "Error happened"
-    if (typeof res === "object" && res !== null && "role" in res) {
-      setRole(res.role);
+    const res = await getARole(EnvId);
+
+    if (res === "ADMIN" || res === "VIEWER") {
+      setRole(res);
     } else {
-      console.log("Failed to fetch role:", res);
+      console.warn("Unexpected role response:", res);
     }
-    return
   }
   useEffect(() => {
     getRole()

@@ -216,17 +216,7 @@ export async function createPhone({phoneName, buyerName, buyerNumber, price, fir
         isPaids: true
       }
     })
- const ispaid =  await Promise.all(
-  Array.from({ length: months }).map(() =>
-    db.isPaid.create({
-      data: {
-        isPaid: false,
-        phoneId: phone.id,
-      },
-    })
-  )
-    );
-    console.log("IsPaid",ispaid)
+
     console.log("Phone created successfully");
     revalidatePath("/")
     return phone
@@ -465,6 +455,67 @@ export async function getPhone(environmentId: string) {
     const phones = await db.phone.findMany({
       where: {
         environmentId,
+      },
+      include: {
+        creator: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    revalidatePath("/");
+    return phones;
+  } catch (err: unknown) {
+    if (err instanceof Error) return "Error----" + err.message;
+    else return "Unknown Error occurred";
+  }
+}
+export async function getCollaboratorsPhones(environmentId: string, creatorId: string) {
+  try {    
+    const session = await auth();
+  
+    if (!session?.user?.email) {
+        return "You need to sign in first";
+    }
+
+    const user = await db.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true },
+    });
+
+    if (!user || !user.id) {
+      return "User Not Found";
+    }
+
+    // Check if the user is the owner of the environment
+    const environment = await db.environment.findUnique({
+      where: { id: environmentId },
+      select: { ownerId: true },
+    });
+
+    if (!environment) {
+      return "Environment Not Found";
+    }
+
+    // Check if the user is a collaborator
+    const isCollaborator = await db.collaborator.findFirst({
+      where: {
+        environmentId,
+        userId: user.id,
+      },
+    });
+
+    // If user is not the owner and not a collaborator, deny access
+    if (environment.ownerId !== user.id && !isCollaborator) {
+      return "Access Denied: You are not authorized to view this data.";
+    }
+
+    // Fetch the phones if the user is authorized
+    const phones = await db.phone.findMany({
+      where: {
+        environmentId,
+        creatorId,
       },
       include: {
         creator: true,
@@ -735,7 +786,7 @@ export async function JoinEnviromnent({environmentId, password}: collaboratorPro
     else return "Unknown Error occurred"
   }
 }
-export async function getCollaborators(environmentId: string) {
+export async function getARole(environmentId: string) {
   try {    
     const session = await auth();
   
@@ -766,14 +817,54 @@ export async function getCollaborators(environmentId: string) {
     });
 
     revalidatePath("/")
-    return collaborator;
+    if (environment.ownerId === user.id) {
+      return "ADMIN" 
+    }else return collaborator?.role
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
     else return "Unknown Error occurred"
   }
 }
+
 /////
 
+export async function createIsPaid({id, envId, position}:{id: string, envId: string, position: number}) {
+  try {    
+    const session = await auth();
+  
+    if (!session?.user?.email) {
+        return ("You need to sing in first" )
+    }
+    const user = await db.user.findUnique({where: {email: session.user.email}});
+      
+      if (!user || !user.id) {
+        return ("User Not Found");
+    }
+    const environment = await db.environment.findUnique({
+      where: { id: envId},
+    });
+
+
+    if (!environment) {
+      throw new Error("Environment not found");
+    }
+    
+
+    const create = await db.isPaid.create({
+      data: {
+        position,
+        isPaid: true,
+        phoneId: id,
+      },
+    });
+
+    revalidatePath("/")
+    return create;
+  } catch (err: unknown) {
+    if (err instanceof Error) return ("Error----" + err.message)
+    else return "Unknown Error occurred"
+  }
+}
 export async function getIsPaid({id, envId}:{id: string, envId: string}) {
   try {    
     const session = await auth();
