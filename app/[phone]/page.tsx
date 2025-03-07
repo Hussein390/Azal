@@ -150,7 +150,7 @@ export default function page({ params }: { params: Promise<{ phone: string }> })
       </div>
       <div className=" flex items-center justify-between ">
         <p className="font-sans font-semibold ">تحيه طيبه من مركز <span className='text-blue-700'>الأزل</span></p>
-        <p className="font-sans font-semibold ">تاريخ الوصل :<span className='text-blue-700'>{formattedDate}</span></p>
+        <p className="font-sans font-semibold ">تاريخ الوصل : <span className='text-blue-700'>{formattedDate}</span></p>
         <p className="font-sans font-semibold "> رقم المركز: <span className='text-blue-600 mr-2'>07716701849</span> </p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 w-full relative mt-6" >
@@ -180,7 +180,7 @@ export default function page({ params }: { params: Promise<{ phone: string }> })
               {Array.from({ length: months }, (_, index) => {
                 // Ensure createdAt exists and clone it to avoid mutation
                 const date = phone?.createdAt ? new Date(phone.createdAt) : new Date();
-                date.setMonth(date.getMonth() + index); // Increment month
+                date.setMonth(date.getMonth() + index + 1); // Increment month
 
                 const remaining =
                   phone?.price && phone?.fixedCut
