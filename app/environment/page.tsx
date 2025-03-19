@@ -53,7 +53,7 @@ export default function Page() {
       </div>
 
       {envirnoment ? (
-        <div className="p-6 rounded-md border shadow mt-4 flex items-start justify-between">
+        <div className="p-6 rounded-md border shadow mt-4 flex items-start justify-between flex-col md:flex-row">
           <div>
             <p className="my-2 font-sans font-semibold">
               Envirnoment Name: <span className='ml-1 text-blue-500'>{envirnoment.name}</span>
@@ -82,7 +82,7 @@ export default function Page() {
         </div>
       ) : <p>No Environment</p>}
 
-      <div className="p-3 rounded-md border mt-2 flex items-start justify-between">
+      <div className="p-3 rounded-md border mt-2 flex items-start justify-between flex-col md:flex-row gap-y-2 md:gap-y-0">
         <div>
           <Image
             src={envirnoment?.collaborators?.find(item => item.user.name === (collaborators || "Hussein Salim"))?.user.image || "/azal.png"}
@@ -122,8 +122,8 @@ export default function Page() {
             </p>
           </div>
         </div>
-        <div className="w-[200px]">
-          <Select onValueChange={value => setCollaborators(value)}>
+        <div className="w-[200px] mt-2 md:mt-0">
+          <Select value={collaborators || 'Hussein Salim'} onValueChange={value => setCollaborators(value)}>
             <SelectTrigger id="framework">
               <SelectValue className='placeholder:font-semibold' placeholder="اختر مستثمر  " />
             </SelectTrigger>
