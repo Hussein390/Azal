@@ -19,13 +19,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { createItem, createPhone, getEnvironmentById, getItems, getPhone } from "../../backend/envirnoment"
-import { DataPhones, ItemProps, PhoneProps } from "./dataProvider"
+import { create_Fix_Phone, createFixPhoneProps, createItem, createPhone, get_Fix_Phones, getEnvironmentById, getItems, getPhone } from "../../../backend/envirnoment"
+import { DataPhones, ItemProps, PhoneProps } from "../dataProvider"
+import Phones from "./phones"
+import FixPhones from "./fixPhone"
 
 export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }) {
-  const { setPhones, showAlert, setItems, isPhone } = DataPhones();
+  const { setPhones, setFixPhones, showAlert, setItems, isPhone } = DataPhones();
   const [collaborators, setCollaborators] = React.useState([{ user: { id: '', name: '' } }]);
-  const [open, setIsOpen] = React.useState("Item");
+  const [open, setIsOpen] = React.useState("Phone");
+  const [FixPhone, setFixPhone] = React.useState<createFixPhoneProps>({
+    phoneName: '',
+    clientName: '',
+    clientNumber: '',
+    price: '',
+    firstPrice: '',
+    profit: '',
+    type: 'Android',
+    environmentId: '',
+    userId: '',
+    bug: ''
+  });
   const [phone, setPhone] = React.useState<PhoneProps>({
     phoneName: '',
     buyerName: '',
@@ -38,6 +52,7 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
     environmentId: '',
     userId: ''
   });
+
   const [item, setItem] = React.useState<ItemProps>({
     itemName: '',
     price: '',
@@ -47,17 +62,76 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
   async function getPhones() {
     const EnvId = localStorage.getItem('envId')!;
 
-    const [phones, items] = await Promise.all([
-      getPhone(EnvId),
-      getItems(EnvId)
-    ]);
-    if (isPhone === "Item") {
-      setItems(items as ItemProps[]);
+    if (isPhone === "Items") {
+      const data = await getItems(EnvId);
+      setItems(data as ItemProps[]);
+
     } else if (isPhone === "Phone") {
-      setPhones(phones as PhoneProps[]);
+      const data = await getPhone(EnvId);
+      setPhones(data as PhoneProps[]);
+
+    } else if (isPhone === "FixPhone") {
+      const data = await get_Fix_Phones(EnvId);
+      setFixPhones(data as createFixPhoneProps[])
     }
   }
-  async function createAPhone() {
+
+  async function CREATE_FIX_PHONE() {
+    try {
+      if (FixPhone) {
+        if (!FixPhone.phoneName.trim()) {
+          showAlert("Please enter a name", false);
+          return;
+        }
+        if (!FixPhone.price) {
+          showAlert("Please add a price", false);
+          return;
+        }
+        if (!FixPhone.type) {
+          showAlert("Please select a system type", false);
+          return;
+        }
+      }
+
+      const EnvId = localStorage.getItem("envId");
+      if (!EnvId) {
+        showAlert("Environment ID not found", false);
+        return;
+      }
+
+      FixPhone.environmentId = EnvId;
+      const res = await create_Fix_Phone(FixPhone);
+      if (res instanceof Error) {
+        showAlert(res.message, false);
+        setOpen(null);
+        return;
+      }
+      if (res) {
+        showAlert("FixPhone created successfully ✅", true);
+        getPhones();
+      }
+      // Close modal and reset form
+      setOpen(null);
+      setFixPhone(prev => ({
+        ...prev,
+        phoneName: "",
+        clientName: "",
+        clientNumber: "",
+        profit: "",
+        price: "",
+        type: "Android",
+        bug: ''
+      }));
+
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.log("Error------", err);
+      } else {
+        console.log("Unknown error occurred");
+      }
+    }
+  }
+  async function CREATE_PHONE() {
     try {
       if (phone) {
         if (!phone.phoneName.trim()) {
@@ -112,8 +186,7 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
       }
     }
   }
-
-  async function createItems() {
+  async function CREATE_ITEMS() {
     if (item) {
       if (!item.itemName.trim()) {
         showAlert("Please enter a name", false);
@@ -124,10 +197,7 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
         return;
       }
 
-      if (!item.type) {
-        showAlert("Please select a system type", false);
-        return;
-      }
+
     }
     const EnvId = localStorage.getItem('envId');
     item.environmentId = EnvId!;
@@ -181,85 +251,50 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
     }
   }
 
-  // async function getUserId() {
-  //   const EnvId = localStorage.getItem('envId')!;
-  //   const res = await getEnvironmentById({ id: EnvId });
-
-  //   console.log(res);
-
-  //   // Check if res is an instance of an Error
-  //   if (res instanceof Error) {
-  //     console.error("Failed to fetch environment:", res.message);
-  //     return;
-  //   }
-
-  //   // Ensure res has the expected structure
-  //   if (res && typeof res === 'object' && 'owner' in res && 'collaborators' in res) {
-  //     const formattedData = [];
-
-  //     // Process the owner data
-  //     if (res.owner) {
-  //       formattedData.push({ user: { id: res.owner.id, name: res.owner.name || '' } });
-  //     }
-
-  //     // Process the collaborators data
-  //     if (Array.isArray(res.collaborators)) {
-  //       res.collaborators.forEach(collab => {
-  //         if (collab.user) {
-  //           formattedData.push({ user: { id: collab.user.id, name: collab.user.name || '' } });
-  //         }
-  //       });
-  //     }
-
-  //     setCollaborators(formattedData);
-  //   } else {
-  //     console.error("Unexpected response format:", res);
-  //   }
-  // }
-
 
 
   React.useEffect(() => {
     getUserId()
   }, [])
   return (
-    <Card className={` delay-50 w-[320px] ${open === "Phone" && 'w-[520px]'}`}>
+    <Card className={` delay-50 w-[520px]'}`}>
       <CardHeader>
         <CardTitle>Create</CardTitle>
         <CardDescription>You can create Phones & Items</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-x-2 mb-3">
-          <button className={`${open == "Item" ? 'bg-blue-400 text-white ' : ''} p-2 rounded-md border hover:bg-blue-500 hover:text-white`} onClick={e => setIsOpen((e.target as HTMLButtonElement).innerText)}>Item</button>
+          <button className={`${open == "Item" ? 'bg-blue-400 text-white ' : ''} p-2 rounded-md border hover:bg-blue-500 hover:text-white`} onClick={e => setIsOpen((e.target as HTMLButtonElement).innerText)}>FixPhone</button>
           <button className={`${open == "Phone" ? 'bg-blue-400 text-white ' : ''} p-2 rounded-md border hover:bg-blue-500 hover:text-white`} onClick={e => setIsOpen((e.target as HTMLButtonElement).innerText)}>Phone</button>
+          <button className={`${open == "Items" ? 'bg-blue-400 text-white ' : ''} p-2 rounded-md border hover:bg-blue-500 hover:text-white`} onClick={e => setIsOpen((e.target as HTMLButtonElement).innerText)}>Items</button>
         </div>
-        <form>
-          <div className="flex justify-between gap-x-4 w-full items-start gap-4">
-            <div className="w-full flex flex-col gap-y-3">
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="name">{open === "Phone" ? 'أسم الهاتف' : 'أسم العنصر'}</Label>
-                <Input onChange={(e) => {
-                  if (open === "Item") {
-                    setItem(prev => ({ ...prev, itemName: e.target.value }));
-                  } else if (open === "Phone") {
-                    setPhone(prev => ({ ...prev, phoneName: e.target.value }));
-                  }
-                }} value={open === "Item" ? item.itemName : phone.phoneName} id="name" placeholder={`${open === 'Phone' ? 'Phone' : 'Item'} Name`} className="appearance-none" />
-              </div>
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="Price">السعر</Label>
-                <Input onChange={(e) => {
-                  if (open === "Item") {
-                    setItem(prev => ({ ...prev, price: e.target.value }));
-                  } else if (open === "Phone") {
-                    setPhone(prev => ({ ...prev, price: e.target.value }));
-                  }
-                }} value={open === "Item" ? item.price : phone.price} type="number" id="Price" placeholder={`${open === 'Phone' ? 'Phone' : 'Item'} Price`} className="appearance-none" />
-              </div>
+        <form >
+          {open === "Phone" ?
+            <Phones phone={phone} setPhone={setPhone} />
+            : open === "FixPhone" ? <FixPhones FixPhone={FixPhone} setFixPhone={setFixPhone} /> :
+              <div id='main' className="flex justify-between gap-x-4 w-full items-start gap-4">
+                <div className="w-full flex flex-col gap-y-3">
+                  <div className="flex flex-col space-y-1.5">
+                    <Label htmlFor="name">أسم العنصر</Label>
+                    <Input onChange={(e) => {
+                      setItem(prev => ({ ...prev, itemName: e.target.value }));
+                    }} value={item.itemName} id="name" placeholder={'Phone Name'} className="appearance-none" />
+                  </div>
+                  <div className="flex flex-col space-y-1.5">
+                    <Label htmlFor="Price">السعر</Label>
+                    <Input onChange={(e) => {
+                      setItem(prev => ({ ...prev, price: e.target.value }));
 
+                    }} value={item.price} type="number" id="Price" placeholder={'Phone Price'} className="appearance-none" />
+                  </div>
+                </div>
+              </div>
+          }
+          {open != "Items" &&
+            <div className="grid grid-cols-2 mt-4 gap-4 w-full">
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="framework">النضام</Label>
-                <Select value={open === "Phone" ? phone.type : item.type || "Android"} onValueChange={(value) => {
+                <Select value={open === "Phone" ? phone.type : item.type} onValueChange={(value) => {
                   if (open === "Item") {
                     setItem(prev => ({ ...prev, type: value }));
                   } else if (open === "Phone") {
@@ -278,61 +313,28 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
               </div>
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="framework">المالك</Label>
-                <Select value={phone.userId} onValueChange={(value) => setPhone(prev => ({ ...prev, userId: value }))}>
+                <Select value={phone.userId} onValueChange={(value) => {
+                  setPhone(prev => ({ ...prev, userId: value }))
+                  console.log(value)
+                }}>
                   <SelectTrigger id="framework">
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent position="popper">
                     {collaborators ? collaborators.map(item => {
                       return (
-                        <SelectItem key={item.user.id} value={item.user.id || 'a'}>{item.user.name}</SelectItem>
+                        <SelectItem key={item.user.id} value={item.user.id || 'كرار امير2'}>{item.user.name}</SelectItem>
                       )
                     }) : <SelectItem value="IOS">No Collaborators</SelectItem>}
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            {open === "Phone" &&
-              <div className="w-full flex flex-col gap-y-3">
-                <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="profit">الربح</Label>
-                  <Input type="number" onChange={(e) => {
-                    setPhone(prev => ({ ...prev, profit: e.target.value }));
-                  }} value={phone.profit} id="profit" placeholder="Profit" />
-                </div>
-                <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="firstPrice">المقدمه</Label>
-                  <Input type="number" onChange={(e) => {
-                    setPhone(prev => ({ ...prev, firstPrice: e.target.value }));
-                  }} value={phone.firstPrice} id="firstPrice" placeholder="First Price" />
-                </div>
-                <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="fixedCut">القطع الشهري</Label>
-                  <Input type="number" onChange={(e) => {
-                    setPhone(prev => ({ ...prev, fixedCut: e.target.value }));
-                  }} value={phone.fixedCut} id="fixedCut" placeholder="fixed Cut" />
-                </div>
-                <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="BuyerName">اسم المشتري</Label>
-                  <Input onChange={(e) => {
-                    setPhone(prev => ({ ...prev, buyerName: e.target.value }));
-                  }} value={phone.buyerName} id="BuyerName" placeholder="Buyer Name" />
-                </div>
-                <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="BuyerNumber">رقم المشتري</Label>
-                  <Input onChange={(e) => {
-                    setPhone(prev => ({ ...prev, buyerNumber: e.target.value }));
-                  }} value={phone.buyerNumber} type="number" id="BuyerNumber" placeholder="Buyer Number" />
-                </div>
-              </div>
-            }
-          </div>
+            </div>}
         </form>
       </CardContent>
       <CardFooter className="flex justify-between">
         <Button variant="outline" onClick={() => setOpen(null)}>Cancel</Button>
-        <Button onClick={() => open === "Item" ? createItems() : createAPhone()}>Create</Button>
+        <Button onClick={() => open === "Phone" ? CREATE_PHONE() : open === "FixPhone" ? CREATE_FIX_PHONE() : open === 'Items' ? CREATE_ITEMS() : ''}>Create</Button>
       </CardFooter>
     </Card>
   );

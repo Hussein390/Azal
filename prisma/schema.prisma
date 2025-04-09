@@ -29,6 +29,25 @@ model Phone {
   updatedAt     DateTime    @updatedAt
 }
 
+model FixPhone {
+  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  phoneName    String
+  clientName   String
+  clientNumber String?
+  price        String
+  firstPrice   String
+  profit       String
+  type         String
+  bug          String
+
+  environmentId String      @db.ObjectId
+  creatorId     String      @db.ObjectId
+  environment   Environment @relation(fields: [environmentId], references: [id])
+  creator       User        @relation(fields: [creatorId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
 model isPaid {
   id       String  @id @default(auto()) @map("_id") @db.ObjectId
   isPaid   Boolean
@@ -60,6 +79,7 @@ model Environment {
   collaborators Collaborator[]
   phones        Phone[]
   items         Item[]
+  fixPhones     FixPhone[]
   accessEmails  AccessEmail[]
 }
 
@@ -100,6 +120,7 @@ model User {
   environments   Environment[]  @relation("OwnerEnvironments")
   collaborations Collaborator[]
   phones         Phone[]
+  fixPhones      FixPhone[]
 }
 
 model Account {

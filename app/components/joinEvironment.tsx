@@ -52,8 +52,8 @@ export function JoinEnvironment({ setIsOpen }: { setIsOpen: (b: string | null) =
   return (
     <Card className="w-[350px]">
       <CardHeader>
-        <CardTitle>Join Environment</CardTitle>
-        <CardDescription>Get the Id & Password from the Environment owner to join</CardDescription>
+        <CardTitle>انضم الى بيأت عمل</CardTitle>
+        <CardDescription style={{ direction: 'rtl' }}>احصل على ال Id و ال Password من المالك للنضمام</CardDescription>
       </CardHeader>
       <CardContent>
         <form>
@@ -70,8 +70,8 @@ export function JoinEnvironment({ setIsOpen }: { setIsOpen: (b: string | null) =
         </form>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button variant="outline" onClick={() => setIsOpen(null)}>Cancel</Button>
-        <Button onClick={createEnv}>Join</Button>
+        <Button variant="outline" onClick={() => setIsOpen(null)}>ألفاء</Button>
+        <Button onClick={createEnv}>أنضمام</Button>
       </CardFooter>
     </Card>
   )

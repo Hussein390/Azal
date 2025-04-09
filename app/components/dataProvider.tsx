@@ -1,4 +1,5 @@
 'use client'
+import { createFixPhoneProps } from "@/backend/envirnoment";
 import React, { createContext, ReactNode, useContext, useState, Dispatch, SetStateAction } from "react";
 
 // Define the type for days
@@ -34,6 +35,8 @@ export type ItemProps = {
 type IsOpenContextType = {
   phones: PhoneProps[];
   setPhones: Dispatch<SetStateAction<PhoneProps[]>>;
+  fixPhones: createFixPhoneProps[];
+  setFixPhones: Dispatch<SetStateAction<createFixPhoneProps[]>>;
   items: ItemProps[];
   setItems: Dispatch<SetStateAction<ItemProps[]>>;
   isPhone: string;
@@ -45,6 +48,8 @@ type IsOpenContextType = {
 const DataContext = createContext<IsOpenContextType>({
   phones: [],
   setPhones: () => { },
+  fixPhones: [],
+  setFixPhones: () => { },
   items: [],
   setItems: () => { },
   isPhone: '',
@@ -55,6 +60,7 @@ const DataContext = createContext<IsOpenContextType>({
 // Create a provider component
 export const DataProvider = ({ children }: { children: ReactNode }) => {
   const [phones, setPhones] = useState<PhoneProps[]>([]);
+  const [fixPhones, setFixPhones] = useState<createFixPhoneProps[]>([]);
   const [items, setItems] = useState<ItemProps[]>([]);
   const [isPhone, setIsPhone] = useState<string>("Phone");
   const [alertMessage, setAlertMessage] = React.useState<string | null>(null);
@@ -73,7 +79,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <DataContext.Provider value={{ phones, setPhones, setItems, items, isPhone, setIsPhone, showAlert }}>
+    <DataContext.Provider value={{ fixPhones, setFixPhones, phones, setPhones, setItems, items, isPhone, setIsPhone, showAlert }}>
       {children}
       {(alertMessage || alertSuccessMessage) && (
         <div className={`fixed top-16 right-3 outline-2 ${alertSuccessMessage ? 'outline-green-600' : 'outline-red-600'}  outline rounded-md`}>

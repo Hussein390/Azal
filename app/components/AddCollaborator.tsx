@@ -86,8 +86,8 @@ export function AddCollaborator({ setIsOpen }: { setIsOpen: (b: string | null) =
         </form>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button onClick={createEnv}>Create</Button>
-        <Button variant="outline" onClick={() => setIsOpen(null)}>Cancel</Button>
+        <Button onClick={createEnv}>أضف</Button>
+        <Button variant="outline" onClick={() => setIsOpen(null)}>ألفاء</Button>
       </CardFooter>
     </Card>
   )

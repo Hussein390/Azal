@@ -90,7 +90,7 @@ export function ItemsSearch() {
 
 
   return (
-    <div className='hidden lg:flex'>
+    <div className=' lg:flex mt-12'>
       <Card className="w-[300px] ">
         <CardHeader>
           <CardTitle>Search</CardTitle>

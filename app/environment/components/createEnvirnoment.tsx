@@ -36,8 +36,8 @@ export function CreateEnvironment({ setIsOpen }: { setIsOpen: (b: string | null)
   return (
     <Card className="w-[350px]">
       <CardHeader>
-        <CardTitle>Create Environment</CardTitle>
-        <CardDescription>Deploy your new project in one-click.</CardDescription>
+        <CardTitle>أنشاء بيأت عمل</CardTitle>
+        <CardDescription className="font-sans">قم في أضافه أسم & والرمز </CardDescription>
       </CardHeader>
       <CardContent>
         <form>
@@ -54,8 +54,8 @@ export function CreateEnvironment({ setIsOpen }: { setIsOpen: (b: string | null)
         </form>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button variant="outline" onClick={() => setIsOpen(null)}>Cancel</Button>
-        <Button onClick={createEnv}>Deploy</Button>
+        <Button variant="outline" onClick={() => setIsOpen(null)}>ألفاء</Button>
+        <Button onClick={createEnv}>أنشاء</Button>
       </CardFooter>
     </Card>
   )

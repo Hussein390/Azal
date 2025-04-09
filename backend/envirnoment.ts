@@ -210,7 +210,7 @@ export async function createPhone({phoneName, buyerName, buyerNumber, price, fir
         type,
         environmentId,
         updatedPrice: String(Number(price) + Number(profit) - Number(firstPrice)),
-        creatorId: userId || user.id,
+        creatorId: userId || environment.ownerId,
       },
       include: {
         isPaids: true
@@ -931,6 +931,208 @@ export async function updateIsPaid({id, envId}:{id: string, envId: string}) {
 
     revalidatePath("/")
     return collaborator;
+  } catch (err: unknown) {
+    if (err instanceof Error) return ("Error----" + err.message)
+    else return "Unknown Error occurred"
+  }
+}
+
+
+//// Fix Phone
+
+export type createFixPhoneProps = {
+  id?: string
+  phoneName :   string
+  clientName:    string
+  clientNumber?: string
+  price: string
+  firstPrice: string
+  profit: string
+  type:         string
+  environmentId: string
+  bug :string
+  userId?: string
+  createdAt?: Date;
+    creator?: {
+    name: string;
+  };
+}
+export async function create_Fix_Phone({phoneName, bug, clientName, clientNumber, price, firstPrice, type, environmentId, profit, userId}: createFixPhoneProps) {
+  try {    
+    const session = await auth();
+  
+    if (!session?.user?.email) {
+        return ("You need to sing in first" )
+    }
+    const user = await db.user.findUnique({where: {email: session.user.email}});
+      
+      if (!user || !user.id) {
+        return ("User Not Found");
+    }
+        const environment = await db.environment.findUnique({
+      where: { id: environmentId },
+      select: { ownerId: true },
+    });
+
+    if (!environment) {
+      return new Error("Environment Not Found");
+    }
+
+    // Check if the user is a collaborator
+    const isCollaborator = await db.collaborator.findFirst({
+      where: {
+        environmentId,
+        userId: user.id,
+      },
+    });
+
+    // If user is not the owner and not a collaborator, deny access
+    if (environment.ownerId !== user.id && !isCollaborator || isCollaborator?.role === 'VIEWER') {
+      return new Error("You are not allowed to create");
+    }
+    const phone = await db.fixPhone.create({
+      data: {
+        phoneName,
+        clientName,
+        clientNumber,
+        price,
+        firstPrice,
+        profit,
+        type,
+        bug,
+        environmentId,
+        creatorId: userId || environment.ownerId,
+      },
+    })
+
+    console.log("Fix Phone created successfully");
+    revalidatePath("/")
+    return phone
+  } catch (err: unknown) {
+    if (err instanceof Error) return ("Error----" + err.message)
+    else return "Unknown Error occurred"
+  }
+}
+
+export async function get_Fix_Phones(environmentId: string) {
+  try {    
+    const session = await auth();
+  
+    if (!session?.user?.email) {
+        return ("You need to sing in first" )
+    }
+    const user = await db.user.findUnique({where: {email: session.user.email}});
+      
+      if (!user || !user.id) {
+        return ("User Not Found");
+    }
+    const environment = await db.environment.findUnique({
+      where: { id: environmentId },
+      select: { ownerId: true },
+    });
+
+    if (!environment) {
+      return new Error("Environment Not Found");
+    }
+
+    // Check if the user is a collaborator
+    const isCollaborator = await db.collaborator.findFirst({
+      where: {
+        environmentId,
+        userId: user.id,
+      },
+    });
+
+    // If user is not the owner and not a collaborator, deny access
+    if (environment.ownerId !== user.id && !isCollaborator) {
+      return new Error("Access Denied: You are not authorized to view this data.");
+    }
+    const phones = await db.fixPhone.findMany({
+      include: {
+        creator: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    revalidatePath("/")
+    return phones
+  } catch (err: unknown) {
+    if (err instanceof Error) return ("Error----" + err.message)
+    else return "Unknown Error occurred"
+  }
+}
+export async function delete_Fix_Phone(id: string, envId: string) {
+  try {    
+    const session = await auth();
+  
+    if (!session?.user?.email) {
+        return ("You need to sing in first" )
+    }
+    const user = await db.user.findUnique({where: {email: session.user.email}});
+      
+      if (!user || !user.id) {
+        return ("User Not Found");
+    }
+    const environment = await db.environment.findUnique({
+      where: { id: envId },
+      select: { ownerId: true },
+    });
+
+    if (!environment) {
+      return new Error("Environment Not Found");
+    }
+
+    // Check if the user is a collaborator
+    const isCollaborator = await db.collaborator.findFirst({
+      where: {
+        environmentId: envId,
+        userId: user.id,
+      },
+    });
+
+    // If user is not the owner and not a collaborator, deny access
+    if (environment.ownerId !== user.id && !isCollaborator || isCollaborator?.role === 'VIEWER') {
+      return new Error("You are not allowed to delete");
+    }
+    
+    const phones = await db.$transaction([
+  db.fixPhone.delete({ where: { id } }) // Then delete the phone
+]);
+
+
+    revalidatePath("/")
+    return phones
+  } catch (err: unknown) {
+    if (err instanceof Error) return ("Error----" + err.message)
+    else return "Unknown Error occurred"
+  }
+}
+export async function get_A_Fix_Phone(id: string) {
+  try {    
+    const session = await auth();
+  
+    if (!session?.user?.email) {
+        return ("You need to sing in first" )
+    }
+    const user = await db.user.findUnique({where: {email: session.user.email}});
+      
+      if (!user || !user.id) {
+        return ("User Not Found");
+    }
+    
+    const phones = await db.fixPhone.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        creator: true
+      },
+    });
+
+    revalidatePath("/")
+    return phones
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
     else return "Unknown Error occurred"
