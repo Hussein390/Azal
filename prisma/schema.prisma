@@ -57,16 +57,19 @@ model isPaid {
 }
 
 model Item {
-  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
   itemName String
   price    String
+  image    String?
   type     String
+  length   String?
 
   environmentId String      @db.ObjectId
+  creatorId     String?     @db.ObjectId
   environment   Environment @relation(fields: [environmentId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  creator       User?       @relation(fields: [creatorId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 }
 
 /// Environment
@@ -120,6 +123,7 @@ model User {
   environments   Environment[]  @relation("OwnerEnvironments")
   collaborations Collaborator[]
   phones         Phone[]
+  items          Item[]
   fixPhones      FixPhone[]
 }
 

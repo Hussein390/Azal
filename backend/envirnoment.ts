@@ -1,7 +1,6 @@
 "use server"
 import { auth } from '@/auth'
 import { db } from '@/db';
-import { revalidatePath } from 'next/cache';
 
 
 ////// Environment
@@ -35,7 +34,7 @@ export async function createAnEnvironment({name, password}: createEnvironmentPro
       }
     })
     console.log("environment created successfully");
-    revalidatePath("/")
+    
     return environment
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
@@ -65,7 +64,7 @@ export async function getEnvironment({name}: {name: string}) {
         owner: true
       } });
 
-    revalidatePath("/")
+    
     return envirnoment
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
@@ -107,7 +106,7 @@ export async function getEnvironmentById({id}: {id: string}) {
       },
     });
 
-    revalidatePath("/")
+    
     return envirnoment
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
@@ -141,7 +140,7 @@ export async function deleteEnvironment({id}: {id: string}) {
     });
 
     console.log("environment created successfully");
-    revalidatePath("/")
+    
     return envirnoment
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
@@ -218,7 +217,7 @@ export async function createPhone({phoneName, buyerName, buyerNumber, price, fir
     })
 
     console.log("Phone created successfully");
-    revalidatePath("/")
+    
     return phone
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
@@ -279,7 +278,7 @@ export async function getAPhone({environmentId, phoneName, type}: GetAPhones) {
       }
     });
 
-    revalidatePath("/")
+    
     return phones
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
@@ -326,7 +325,7 @@ export async function deleteMyPhone(id: string, envId: string) {
 ]);
 
 
-    revalidatePath("/")
+    
     return phones
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
@@ -355,7 +354,7 @@ export async function getMyPhone(id: string) {
       },
     });
 
-    revalidatePath("/")
+    
     return phones
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
@@ -404,7 +403,7 @@ export async function updatePhone({id, environmentId, value}: {id: string, envir
       }
     });
 
-    revalidatePath("/")
+    
     return phones
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
@@ -464,7 +463,7 @@ export async function getPhone(environmentId: string) {
       },
     });
 
-    revalidatePath("/");
+    ;
     return phones;
   } catch (err: unknown) {
     if (err instanceof Error) return "Error----" + err.message;
@@ -525,7 +524,7 @@ export async function getCollaboratorsPhones(environmentId: string, creatorId: s
       },
     });
 
-    revalidatePath("/");
+    ;
     return phones;
   } catch (err: unknown) {
     if (err instanceof Error) return "Error----" + err.message;
@@ -536,12 +535,16 @@ export async function getCollaboratorsPhones(environmentId: string, creatorId: s
 
 // create Item
 export type createItemProps = {
+  id?: string
   itemName :   string
-  type:         string
-  price?:         string
-  environmentId:string
+  type: string
+  image?: string
+  userId?: string
+  length: string 
+  price:  string
+  environmentId: string
 }
-export async function createItem({itemName, type, environmentId, price}: createItemProps) {
+export async function createItem({itemName, type, environmentId, price, image, length, userId}: createItemProps) {
   try {    
     const session = await auth();
   
@@ -577,13 +580,16 @@ export async function createItem({itemName, type, environmentId, price}: createI
     const phone = await db.item.create({
       data: {
         itemName,
-        price: price!,
+        image: image || "",
+        length: length,
+        price: price,
         type,
         environmentId,
+        creatorId: userId || environment.ownerId,
       }
     })
     
-    revalidatePath("/")
+    
     return phone
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
@@ -640,7 +646,7 @@ export async function getItems(environmentId: string) {
       },
     });
 
-    revalidatePath("/");
+    ;
     return phones;
   } catch (err: unknown) {
     if (err instanceof Error) return "Error----" + err.message;
@@ -648,7 +654,7 @@ export async function getItems(environmentId: string) {
   }
 }
 
-export async function getAnItem({environmentId, itemName, type}: createItemProps) {
+export async function updateItem({ environmentId, price, length, id }: {environmentId: string, price: string, length: string, id: string}) {
   try {    
     const session = await auth();
   
@@ -660,18 +666,45 @@ export async function getAnItem({environmentId, itemName, type}: createItemProps
       if (!user || !user.id) {
         return ("User Not Found");
     }
-    const phones = await db.item.findMany({
+    let data: { price?: string; length?: string } = {};
+    if (price !== undefined) data.price = String(price);
+    if (length !== undefined) data.length = String(length);
+
+    const phones = await db.item.update({
       where: {
+        id,
         environmentId,
-        itemName: {contains: itemName, mode:'insensitive'},
-        type,
       },
-      orderBy: {
-        createdAt: 'desc'
-      }
+      data,
     });
 
-    revalidatePath("/")
+    
+    return phones
+  } catch (err: unknown) {
+    if (err instanceof Error) return ("Error----" + err.message)
+    else return "Unknown Error occurred"
+  }
+}
+export async function deleteItem({ environmentId, id}: { environmentId: string, id: string }) {
+  try {    
+    const session = await auth();
+  
+    if (!session?.user?.email) {
+        return ("You need to sing in first" )
+    }
+    const user = await db.user.findUnique({where: {email: session.user.email}});
+      
+      if (!user || !user.id) {
+        return ("User Not Found");
+    }
+
+    const phones = await db.item.delete({
+      where: {
+        id,
+        environmentId,
+      },
+    });
+
     return phones
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
@@ -720,7 +753,7 @@ export async function addAccessEmails({email, role, environmentId}:accessEmailsP
       }
     })
     console.log("Email added successfully");
-    revalidatePath("/")
+    
     return phone
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
@@ -779,7 +812,7 @@ export async function JoinEnviromnent({environmentId, password}: collaboratorPro
       },
     });
 
-    revalidatePath("/")
+    
     return newCollaborator;
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
@@ -816,7 +849,7 @@ export async function getARole(environmentId: string) {
       },
     });
 
-    revalidatePath("/")
+    
     if (environment.ownerId === user.id) {
       return "ADMIN" 
     }else return collaborator?.role
@@ -858,7 +891,7 @@ export async function createIsPaid({id, envId, position}:{id: string, envId: str
       },
     });
 
-    revalidatePath("/")
+    
     return create;
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
@@ -893,7 +926,7 @@ export async function getIsPaid({id, envId}:{id: string, envId: string}) {
       },
     });
 
-    revalidatePath("/")
+    
     return collaborator;
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
@@ -929,7 +962,7 @@ export async function updateIsPaid({id, envId}:{id: string, envId: string}) {
       }
     });
 
-    revalidatePath("/")
+    
     return collaborator;
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
@@ -1006,7 +1039,7 @@ export async function create_Fix_Phone({phoneName, bug, clientName, clientNumber
     })
 
     console.log("Fix Phone created successfully");
-    revalidatePath("/")
+    
     return phone
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
@@ -1056,7 +1089,7 @@ export async function get_Fix_Phones(environmentId: string) {
       }
     });
 
-    revalidatePath("/")
+    
     return phones
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
@@ -1102,7 +1135,7 @@ export async function delete_Fix_Phone(id: string, envId: string) {
 ]);
 
 
-    revalidatePath("/")
+    
     return phones
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
@@ -1131,7 +1164,7 @@ export async function get_A_Fix_Phone(id: string) {
       },
     });
 
-    revalidatePath("/")
+    
     return phones
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)

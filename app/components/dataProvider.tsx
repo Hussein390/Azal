@@ -24,15 +24,24 @@ export type PhoneProps = {
 };
 
 export type ItemProps = {
+  id: string,
   itemName: string;
   price: string;
   type: string;
   createdAt?: Date;
   environmentId: string;
+  image?: string;
+  userId?: string;
+  length: string;
+  creator?: {
+    name: string;
+  };
 };
 
 // Define the context value type
 type IsOpenContextType = {
+  search: { name: string, type: string },
+  setSearch: Dispatch<SetStateAction<{ name: string, type: string }>>,
   phones: PhoneProps[];
   setPhones: Dispatch<SetStateAction<PhoneProps[]>>;
   fixPhones: createFixPhoneProps[];
@@ -46,6 +55,8 @@ type IsOpenContextType = {
 
 // Create the context with a proper default value
 const DataContext = createContext<IsOpenContextType>({
+  search: { name: '', type: '' },
+  setSearch: () => { },
   phones: [],
   setPhones: () => { },
   fixPhones: [],
@@ -63,6 +74,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const [fixPhones, setFixPhones] = useState<createFixPhoneProps[]>([]);
   const [items, setItems] = useState<ItemProps[]>([]);
   const [isPhone, setIsPhone] = useState<string>("Phone");
+  const [search, setSearch] = React.useState<{ name: string, type: string }>({ name: '', type: '' });
   const [alertMessage, setAlertMessage] = React.useState<string | null>(null);
   const [alertSuccessMessage, setAlertSuccessMessage] = React.useState<string | null>(null);
 
@@ -79,7 +91,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <DataContext.Provider value={{ fixPhones, setFixPhones, phones, setPhones, setItems, items, isPhone, setIsPhone, showAlert }}>
+    <DataContext.Provider value={{ search, setSearch, fixPhones, setFixPhones, phones, setPhones, setItems, items, isPhone, setIsPhone, showAlert }}>
       {children}
       {(alertMessage || alertSuccessMessage) && (
         <div className={`fixed top-16 right-3 outline-2 ${alertSuccessMessage ? 'outline-green-600' : 'outline-red-600'}  outline rounded-md`}>

@@ -57,7 +57,13 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
     itemName: '',
     price: '',
     type: 'Android',
-    environmentId: ''
+    environmentId: '',
+    image: '',
+    userId: '',
+    length: '1',
+    creator: {
+      name: ''
+    }
   });
   async function getPhones() {
     const EnvId = localStorage.getItem('envId')!;
@@ -217,6 +223,12 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
       itemName: '',
       price: 'Android',
       type: '',
+      image: '',
+      userId: '',
+      length: '1',
+      creator: {
+        name: ''
+      }
     }));
     setOpen(null)
     return
@@ -257,45 +269,60 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
     getUserId()
   }, [])
   return (
-    <Card className={` delay-50 w-[520px]'}`}>
+    <Card className={` delay-50 md:w-[400px]`}>
       <CardHeader>
         <CardTitle>Create</CardTitle>
         <CardDescription>You can create Phones & Items</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-x-2 mb-3">
-          <button className={`${open == "Item" ? 'bg-blue-400 text-white ' : ''} p-2 rounded-md border hover:bg-blue-500 hover:text-white`} onClick={e => setIsOpen((e.target as HTMLButtonElement).innerText)}>FixPhone</button>
+          {/* <button className={`${open == "Item" ? 'bg-blue-400 text-white ' : ''} p-2 rounded-md border hover:bg-blue-500 hover:text-white`} onClick={e => setIsOpen((e.target as HTMLButtonElement).innerText)}>FixPhone</button> */}
           <button className={`${open == "Phone" ? 'bg-blue-400 text-white ' : ''} p-2 rounded-md border hover:bg-blue-500 hover:text-white`} onClick={e => setIsOpen((e.target as HTMLButtonElement).innerText)}>Phone</button>
           <button className={`${open == "Items" ? 'bg-blue-400 text-white ' : ''} p-2 rounded-md border hover:bg-blue-500 hover:text-white`} onClick={e => setIsOpen((e.target as HTMLButtonElement).innerText)}>Items</button>
         </div>
         <form >
           {open === "Phone" ?
-            <Phones phone={phone} setPhone={setPhone} />
-            : open === "FixPhone" ? <FixPhones FixPhone={FixPhone} setFixPhone={setFixPhone} /> :
-              <div id='main' className="flex justify-between gap-x-4 w-full items-start gap-4">
-                <div className="w-full flex flex-col gap-y-3">
-                  <div className="flex flex-col space-y-1.5">
-                    <Label htmlFor="name">أسم العنصر</Label>
-                    <Input onChange={(e) => {
-                      setItem(prev => ({ ...prev, itemName: e.target.value }));
-                    }} value={item.itemName} id="name" placeholder={'Phone Name'} className="appearance-none" />
-                  </div>
-                  <div className="flex flex-col space-y-1.5">
-                    <Label htmlFor="Price">السعر</Label>
-                    <Input onChange={(e) => {
-                      setItem(prev => ({ ...prev, price: e.target.value }));
+            < Phones phone={phone} open={open} setItem={setItem} setPhone={setPhone} collaborators={collaborators} />
 
-                    }} value={item.price} type="number" id="Price" placeholder={'Phone Price'} className="appearance-none" />
-                  </div>
+            :
+            <div id='main' className="flex justify-between gap-x-4 w-full items-start gap-4">
+              <div className="w-full flex flex-col gap-y-3">
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="name">أسم العنصر</Label>
+                  <Input onChange={(e) => {
+                    setItem(prev => ({ ...prev, itemName: e.target.value }));
+                  }} value={item.itemName} id="name" placeholder={'Phone Name'} className="appearance-none" />
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="Price">السعر</Label>
+                  <Input onChange={(e) => {
+                    setItem(prev => ({ ...prev, price: e.target.value }));
+
+                  }} value={item.price} type="number" id="Price" placeholder={'Phone Price'} className="appearance-none" />
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="Pieces">العدد</Label>
+                  <Input onChange={(e) => {
+                    setItem(prev => ({ ...prev, length: e.target.value }));
+
+                  }} value={item.length} type="number" id="Pieces" placeholder={'Pieces'} className="appearance-none" />
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="Image">صوره</Label>
+                  <Input onChange={(e) => {
+                    setItem(prev => ({ ...prev, image: e.target.value }));
+
+                  }} value={item.image} type="file" id="Image" placeholder={'Image'} className="appearance-none" />
                 </div>
               </div>
+            </div>
           }
-          {open != "Items" &&
+          {open == "Items" &&
             <div className="grid grid-cols-2 mt-4 gap-4 w-full">
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="framework">النضام</Label>
-                <Select value={open === "Phone" ? phone.type : item.type} onValueChange={(value) => {
-                  if (open === "Item") {
+                <Select onValueChange={(value) => {
+                  if (open === "Items") {
                     setItem(prev => ({ ...prev, type: value }));
                   } else if (open === "Phone") {
                     setPhone(prev => ({ ...prev, type: value }));
@@ -307,7 +334,7 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
                   <SelectContent position="popper">
                     <SelectItem value="IOS">IOS</SelectItem>
                     <SelectItem value="Android">Android</SelectItem>
-                    {open === 'Item' && <SelectItem value="Items">Items</SelectItem>}
+                    {open === 'Items' && <SelectItem value="Items">Items</SelectItem>}
                   </SelectContent>
                 </Select>
               </div>
