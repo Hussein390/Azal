@@ -54,6 +54,7 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
   });
 
   const [item, setItem] = React.useState<ItemProps>({
+    id: '',
     itemName: '',
     price: '',
     type: 'Android',
