@@ -22,7 +22,6 @@ import {
 import { create_Fix_Phone, createFixPhoneProps, createItem, createPhone, get_Fix_Phones, getEnvironmentById, getItems, getPhone } from "../../../backend/envirnoment"
 import { DataPhones, ItemProps, PhoneProps } from "../dataProvider"
 import Phones from "./phones"
-import FixPhones from "./fixPhone"
 
 export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }) {
   const { setPhones, setFixPhones, showAlert, setItems, isPhone } = DataPhones();
@@ -270,7 +269,7 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
     getUserId()
   }, [])
   return (
-    <Card className={` delay-50 md:w-[400px]`}>
+    <Card className={` delay-50 min-w-[360px]`}>
       <CardHeader>
         <CardTitle>Create</CardTitle>
         <CardDescription>You can create Phones & Items</CardDescription>
@@ -310,10 +309,22 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
                 </div>
                 <div className="flex flex-col space-y-1.5">
                   <Label htmlFor="Image">صوره</Label>
-                  <Input onChange={(e) => {
-                    setItem(prev => ({ ...prev, image: e.target.value }));
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    id="Image"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setItem((prev) => ({ ...prev, image: reader.result as string }));
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
 
-                  }} value={item.image} type="file" id="Image" placeholder={'Image'} className="appearance-none" />
                 </div>
               </div>
             </div>

@@ -654,7 +654,7 @@ export async function getItems(environmentId: string) {
   }
 }
 
-export async function updateItem({ environmentId, price, length, id }: {environmentId: string, price: string, length: string, id: string}) {
+export async function updateItem({ environmentId, price, length, image, id }: {environmentId: string, image: string, price: string, length: string, id: string}) {
   try {    
     const session = await auth();
   
@@ -666,9 +666,10 @@ export async function updateItem({ environmentId, price, length, id }: {environm
       if (!user || !user.id) {
         return ("User Not Found");
     }
-    let data: { price?: string; length?: string } = {};
+    let data: { price?: string; length?: string, image?: string } = {};
     if (price !== undefined) data.price = String(price);
     if (length !== undefined) data.length = String(length);
+    if (length !== undefined) data.image = String(image);
 
     const phones = await db.item.update({
       where: {
