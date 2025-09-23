@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useState, useRef } from 'react'
 import { DataPhones, PhoneProps } from '../components/dataProvider'
-import { createIsPaid, deleteMyPhone, getIsPaid, getMyPhone, updateIsPaid, updatePhone } from '../../backend/envirnoment';
+import { createIsPaid, deleteMyPhone, getEnvironmentById, getIsPaid, getMyPhone, updateIsPaid, updatePhone } from '../../backend/envirnoment';
 import {
   Table,
   TableBody,
@@ -24,6 +24,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type isPaidProps = {
   position: number,
@@ -33,13 +35,15 @@ type isPaidProps = {
 export default function page({ params }: { params: Promise<{ phone: string }> }) {
   const { showAlert } = DataPhones();
   const [phone, setPhone] = useState<PhoneProps | null>(null);
+  const [date, setDate] = useState('')
+  const [changeOwner, setChangeOwner] = useState(false);
   const price = String(Number(phone?.price) + Number(phone?.profit) - Number(phone?.firstPrice));
   const months = Math.ceil(Number(price) / (parseInt(phone?.fixedCut!) || 50));
   const [isPriced, setIsPriced] = useState<isPaidProps[]>([]);
   const PDFRef = useRef<HTMLDivElement | null>(null)
   const Router = useRouter()
-  const date = new Date();
-  const formattedDate = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+  const nowDate = new Date();
+  const formattedDate = `${nowDate.getFullYear()}/${nowDate.getMonth() + 1}/${nowDate.getDate()}`;
   // fn
   async function handleGeneratePDF() {
     const PDFData = PDFRef.current!;
@@ -113,7 +117,7 @@ export default function page({ params }: { params: Promise<{ phone: string }> })
     const id = (await params).phone;
     const environmentId = localStorage.getItem('envId')!;
     const value = Number(phone?.updatedPrice) - Number(phone?.fixedCut);
-    const data = { id, environmentId, value: String(value) }
+    const data = { id, environmentId, updatedPrice: String(value) }
     const [res, any] = await Promise.all([
       updatePhone(data),
       createIsPaid({ id: id, position: index, envId: environmentId }),
@@ -122,12 +126,86 @@ export default function page({ params }: { params: Promise<{ phone: string }> })
     handlePayment(index)
     return
   }
+  // update date
+  async function updateDate(value: string) {
+    const id = (await params).phone;
+    const environmentId = localStorage.getItem('envId')!;
+    const data = { id, environmentId, date: String(value) }
+    const res = await updatePhone(data);
+    if (res instanceof Error) showAlert(res.message, false)
+    handleGetPhone();
+    return
+  }
+  // Get Collaborators
+  const [collaborators, setCollaborators] = useState<{ user: { id: string, name: string | null } }[] | null>(null)
+  async function getUserId() {
+    const EnvId = localStorage.getItem('envId')!;
+    const res = await getEnvironmentById({ id: EnvId });
+    // Check if res is a string (error message)
+    if (typeof res === 'string') {
+      console.error("Failed to fetch environment:", res);
+      return;
+    }
+
+    // Assuming res is now an object with the expected structure
+    if (res && 'owner' in res && Array.isArray(res.collaborators)) {
+      const formattedData = [];
+
+      // Process the owner data
+      formattedData.push({ user: { id: res.owner.id, name: res.owner.name || '' } });
+
+      // Process the collaborators data
+      res.collaborators.forEach(collab => {
+        if (collab.user) {
+          formattedData.push({ user: { id: collab.user.id, name: collab.user.name || '' } });
+        }
+      });
+      console.log(formattedData)
+
+      setCollaborators(formattedData);
+    } else {
+      console.error("Unexpected response format:", res);
+    }
+  }
+  // Update owner
+  async function updateOwner(value: string) {
+    const id = (await params).phone;
+    const environmentId = localStorage.getItem('envId')!;
+    const data = { id, environmentId, creatorId: value }
+    const res = await updatePhone(data);
+    if (res instanceof Error) showAlert(res.message, false)
+    handleGetPhone();
+    return
+  }
+
+
+  React.useEffect(() => {
+    getUserId()
+  }, [])
   return (
     <div ref={PDFRef} style={{ direction: 'rtl' }} className='md:w-[920px]  mt-16 p-8 rounded-md border shadow-sm mx-auto  relative'>
       <div className="flex items-center gap-x-6 absolute -top-12 left-0">
         <Link href={'/'} className='p-2 rounded border bg-slate-100 hover:bg-slate-200 delay-75 '><ArrowLeft /></Link>
         <button onClick={handleGeneratePDF} className='p-2 rounded border bg-slate-100 hover:bg-slate-200 delay-75 '>Download PDF</button>
-
+        <Dialog>
+          <DialogTrigger className='p-2 rounded border bg-slate-100 hover:bg-slate-200 delay-75 '>Update Date</DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>تغير تاريخ الانشاء</DialogTitle>
+            </DialogHeader>
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className='border p-2 rounded w-full right' />
+            <div className="mt-4 flex items-center justify-between">
+              <DialogClose asChild>
+                <button onClick={() => {
+                  updateDate(date)
+                }} className='p-2 rounded border green-red-600 bg-green-300 hover:bg-green-400 delay-75 '>Upate</button>
+              </DialogClose>
+              <DialogClose asChild>
+                <button type='button' className='p-2 rounded border bg-slate-100 hover:bg-slate-200 delay-75 '>Cancel</button>
+              </DialogClose>
+            </div>
+          </DialogContent>
+        </Dialog>
         <Dialog>
           <DialogTrigger className='p-2 rounded border bg-slate-100 hover:bg-slate-200 delay-75 '>Delete Phone</DialogTrigger>
           <DialogContent>
@@ -163,7 +241,28 @@ export default function page({ params }: { params: Promise<{ phone: string }> })
           <p className="font-sans ">القطع الشهري: <span className='text-blue-600 mr-2 font-semibold'>{phone?.fixedCut} ألف</span></p>
           <p className="font-sans border-t w-fit pt-2">أسم المشتري: <span className='text-black mr-2 font-semibold'>{phone?.buyerName || 'Hussein'} </span></p>
           <p className="font-sans ">رقم المشتري: <span className='text-blue-600 mr-2 font-semibold'>{phone?.buyerNumber || 'لا يوجد رقم'} </span></p>
-          <p className="font-sans owner">المالك: <span className='text-blue-600 mr-2 font-semibold'>{phone?.creator?.name || 'لا يوجد مالك'} </span></p>
+          <button onDoubleClick={() => setChangeOwner(prev => !prev)} className="font-sans owner text-right">المالك: <span className='text-blue-600 mr-2 font-semibold'>{phone?.creator?.name || 'لا يوجد مالك'} </span></button>
+          {changeOwner && <div className="flex flex-col space-y-1.5">
+            <Label htmlFor="framework">المالك</Label>
+            <Select onValueChange={(value) => {
+              updateOwner(value)
+              setChangeOwner(false)
+            }}>
+              <SelectTrigger id="framework">
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent position="popper">
+                {collaborators ? collaborators.filter(
+                  (user, index, self) =>
+                    index === self.findIndex(u => u.user.id === user.user.id)
+                ).map(item => {
+                  return (
+                    <SelectItem key={item.user.id} value={item.user.id || 'كرار امير2'}>{item.user.name}</SelectItem>
+                  )
+                }) : <SelectItem value="IOS">No Collaborators</SelectItem>}
+              </SelectContent>
+            </Select>
+          </div>}
         </div>
         <div className='md:col-span-2 mt-4 md:mt-0 w-full max-h-[400px] overflow-y-auto scroll-smooth ' style={{ scrollbarWidth: 'none' }}>
           <Table className='select-none'>
@@ -180,7 +279,7 @@ export default function page({ params }: { params: Promise<{ phone: string }> })
               {Array.from({ length: months }, (_, index) => {
                 // Ensure createdAt exists and clone it to avoid mutation
                 const date = phone?.createdAt ? new Date(phone.createdAt) : new Date();
-                date.setMonth(date.getMonth() + index + 1); // Increment month
+                date.setMonth(date.getMonth() + index); // Increment month
 
                 const remaining =
                   phone?.price && phone?.fixedCut

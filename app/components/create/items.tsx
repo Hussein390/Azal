@@ -256,6 +256,7 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
           formattedData.push({ user: { id: collab.user.id, name: collab.user.name || '' } });
         }
       });
+      console.log(formattedData)
 
       setCollaborators(formattedData);
     } else {
@@ -354,7 +355,6 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
                 <Label htmlFor="framework">المالك</Label>
                 <Select value={phone.userId} onValueChange={(value) => {
                   setPhone(prev => ({ ...prev, userId: value }))
-                  console.log(value)
                 }}>
                   <SelectTrigger id="framework">
                     <SelectValue placeholder="Select" />

@@ -18,6 +18,7 @@ export type PhoneProps = {
   createdAt?: Date;
   creator?: {
     name: string;
+    id: string;
   };
   userId?: string,
   isPaid?: []

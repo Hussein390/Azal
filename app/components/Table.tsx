@@ -9,10 +9,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { createFixPhoneProps, deleteItem, get_Fix_Phones, getItems, getPhone, updateItem } from '../../backend/envirnoment'
+import { createFixPhoneProps, deleteItem, get_Fix_Phones, getEnvironmentById, getItems, getPhone, updateItem } from '../../backend/envirnoment'
 import { DataPhones, ItemProps, PhoneProps } from './dataProvider'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
 
 
 export default function Tables() {
@@ -22,6 +24,55 @@ export default function Tables() {
   const [isUpdate, setIsUpdate] = useState<{ [key: number]: boolean }>({});
   const [update, setUpdate] = useState<{ length: string, price: string, image: string }>({ image: '', length: '', price: '' });
 
+
+  // Get Collaborators
+  const [ownerID, setOwnerID] = useState<string>('')
+  const [collaborators, setCollaborators] = useState<{ user: { id: string, name: string | null } }[] | null>(null)
+  async function getUserId() {
+    const EnvId = localStorage.getItem('envId')!;
+    const res = await getEnvironmentById({ id: EnvId });
+    // Check if res is a string (error message)
+    if (typeof res === 'string') {
+      console.error("Failed to fetch environment:", res);
+      return;
+    }
+
+    // Assuming res is now an object with the expected structure
+    if (res && 'owner' in res && Array.isArray(res.collaborators)) {
+      const formattedData = [];
+
+      // Process the owner data
+      formattedData.push({ user: { id: res.owner.id, name: res.owner.name || '' } });
+
+      // Process the collaborators data
+      res.collaborators.forEach(collab => {
+        if (collab.user) {
+          formattedData.push({ user: { id: collab.user.id, name: collab.user.name || '' } });
+        }
+      });
+      console.log(formattedData)
+
+      setCollaborators(formattedData);
+    } else {
+      console.error("Unexpected response format:", res);
+    }
+  }
+  React.useEffect(() => {
+    getUserId()
+  }, [])
+
+  const filteredTasks = phones.filter(task => {
+    // if no filter selected, show all
+    if (!ownerID) return true;
+
+    // only show tasks whose creator id matches the selected owner
+    return ownerID === task.creator?.id;
+  });
+
+
+
+
+  // get Phones or Items
   async function getPhones() {
     const EnvId = localStorage.getItem('envId');
     if (!EnvId) {
@@ -90,6 +141,25 @@ export default function Tables() {
           Phone
         </button>
 
+        <div className="ml-12">
+          <Select onValueChange={(value) => {
+            setOwnerID(value)
+          }}>
+            <SelectTrigger id="framework">
+              <SelectValue placeholder="أختر" />
+            </SelectTrigger>
+            <SelectContent position="popper">
+              {collaborators ? collaborators.filter(
+                (user, index, self) =>
+                  index === self.findIndex(u => u.user.id === user.user.id)
+              ).map(item => {
+                return (
+                  <SelectItem key={item.user.id} value={item.user.id || 'كرار امير2'}>{item.user.name}</SelectItem>
+                )
+              }) : <SelectItem value="IOS">No Collaborators</SelectItem>}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       <div className=' mx-auto max-h-[450px] overflow-y-auto relative w-full' style={{ scrollbarWidth: 'none' }}>
         {isPhone === "Phone" ? <Table>
@@ -105,7 +175,7 @@ export default function Tables() {
           </TableHeader>
           <TableBody>
             {(Array.isArray(phones) && phones.length > 0) ?
-              Array.isArray(phones) && phones.map((phone, index) => (
+              Array.isArray(phones) && filteredTasks.map((phone, index) => (
                 <TableRow className="cursor-pointer" onClick={() => router.push(phone.id!)} key={index}>
                   <TableCell className="font-medium">{phone.phoneName}</TableCell>
                   <TableCell>{phone.price}</TableCell>

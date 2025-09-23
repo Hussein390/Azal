@@ -361,7 +361,7 @@ export async function getMyPhone(id: string) {
     else return "Unknown Error occurred"
   }
 }
-export async function updatePhone({id, environmentId, value}: {id: string, environmentId: string, value: string}) {
+export async function updatePhone({id, environmentId, updatedPrice, date, creatorId}: {id: string, environmentId: string, updatedPrice?: string, date?: string, creatorId?: string}) {
   try {    
     const session = await auth();
   
@@ -394,17 +394,39 @@ export async function updatePhone({id, environmentId, value}: {id: string, envir
     if (environment.ownerId !== user.id && !isCollaborator || isCollaborator?.role === 'VIEWER') {
       return new Error("You are not allowed to create");
     }
-    const phones = await db.phone.update({
-      where: {
-        id,
-      },
-      data: {
-        updatedPrice: value,
-      }
-    });
-
-    
-    return phones
+    if (updatedPrice !== '' && updatedPrice !== undefined) {
+      const phones = await db.phone.update({
+        where: {
+          id,
+        },
+        data: {
+          updatedPrice,
+        }
+      });
+      return phones
+    }
+    if (date !== '' && date !== undefined) {
+      const phones = await db.phone.update({
+        where: {
+          id,
+        },
+        data: {
+          createdAt: new Date(date),
+        }
+      });
+      return phones
+    }
+    if (creatorId !== '' && creatorId !== undefined) {
+      const phones = await db.phone.update({
+        where: {
+          id,
+        },
+        data: {
+          creatorId,
+        }
+      });
+      return phones
+    }
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
     else return "Unknown Error occurred"
