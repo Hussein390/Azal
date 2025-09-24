@@ -94,9 +94,12 @@ export default function Phones({ phone, setPhone, open, collaborators, setItem }
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent position="popper">
-                {collaborators ? collaborators.map(item => {
+                {collaborators ? collaborators.filter(
+                  (user, index, self) =>
+                    index === self.findIndex(u => u.user.id === user.user.id)
+                ).map(item => {
                   return (
-                    <SelectItem key={item.user.id} value={item.user.id || 'كرار امير2'}>{item.user.name}</SelectItem>
+                    <SelectItem className='cursor-pointer' key={item.user.id} value={item.user.id || 'كرار امير2'}>{item.user.name}</SelectItem>
                   )
                 }) : <SelectItem value="IOS">No Collaborators</SelectItem>}
               </SelectContent>

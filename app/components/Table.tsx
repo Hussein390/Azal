@@ -18,7 +18,7 @@ import { Label } from '@/components/ui/label'
 
 
 export default function Tables() {
-  const { phones, setPhones, search, setFixPhones, setIsPhone, isPhone, items, setItems } = DataPhones();
+  const { showAlert, phones, setPhones, search, setFixPhones, setIsPhone, isPhone, items, setItems } = DataPhones();
   const router = useRouter()
   const [open, setOpen] = useState<{ [key: number]: boolean }>({});
   const [isUpdate, setIsUpdate] = useState<{ [key: number]: boolean }>({});
@@ -33,7 +33,7 @@ export default function Tables() {
     const res = await getEnvironmentById({ id: EnvId });
     // Check if res is a string (error message)
     if (typeof res === 'string') {
-      console.error("Failed to fetch environment:", res);
+      showAlert("Failed to fetch environment:" + res, false);
       return;
     }
 
@@ -50,8 +50,6 @@ export default function Tables() {
           formattedData.push({ user: { id: collab.user.id, name: collab.user.name || '' } });
         }
       });
-      console.log(formattedData)
-
       setCollaborators(formattedData);
     } else {
       console.error("Unexpected response format:", res);
@@ -61,13 +59,15 @@ export default function Tables() {
     getUserId()
   }, [])
 
-  const filteredTasks = phones.filter(task => {
-    // if no filter selected, show all
-    if (!ownerID) return true;
 
-    // only show tasks whose creator id matches the selected owner
-    return ownerID === task.creator?.id;
-  });
+  const filteredTasks = Array.isArray(phones)
+    ? phones.filter(task => {
+      // if no filter selected, show all
+      if (!ownerID) return true;
+      return task.creator?.id === ownerID;
+    })
+    : [];
+
 
 
 
@@ -122,7 +122,7 @@ export default function Tables() {
     await updateItem(object);
     setIsUpdate(prev => ({ ...prev, [index]: false }))
     setOpen(prev => ({ ...prev, [index]: false }))
-    setItems(prev => prev.map(i => i.id === item.id ? { ...i, length: String(Number(update.length) - 1), price: update.price } : i));
+    setItems(prev => prev.map(i => i.id === item.id ? { ...i, length: String(Number(i.length) > 1 ? Number(i.length) - 1 : 0) } : i));
     setUpdate({ length: '', price: '', image: '' });
   }
   return (
@@ -154,7 +154,7 @@ export default function Tables() {
                   index === self.findIndex(u => u.user.id === user.user.id)
               ).map(item => {
                 return (
-                  <SelectItem key={item.user.id} value={item.user.id || 'كرار امير2'}>{item.user.name}</SelectItem>
+                  <SelectItem className='cursor-pointer' key={item.user.id} value={item.user.id || 'كرار امير2'}>{item.user.name}</SelectItem>
                 )
               }) : <SelectItem value="IOS">No Collaborators</SelectItem>}
             </SelectContent>
@@ -165,6 +165,7 @@ export default function Tables() {
         {isPhone === "Phone" ? <Table>
           <TableHeader>
             <TableRow className='border-b border-b-black'>
+              <TableHead className="w-fit">Count</TableHead>
               <TableHead className="w-fit">Phone Name</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Date</TableHead>
@@ -177,6 +178,7 @@ export default function Tables() {
             {(Array.isArray(phones) && phones.length > 0) ?
               Array.isArray(phones) && filteredTasks.map((phone, index) => (
                 <TableRow className="cursor-pointer" onClick={() => router.push(phone.id!)} key={index}>
+                  <TableCell className="font-medium w-3">{index + 1}</TableCell>
                   <TableCell className="font-medium">{phone.phoneName}</TableCell>
                   <TableCell>{phone.price}</TableCell>
                   <TableCell>
@@ -187,7 +189,9 @@ export default function Tables() {
                   <TableCell className="text-right">{phone.creator ? phone.creator.name : 'Hussein'}</TableCell>
                 </TableRow>
               ))
-              : null}
+              : <TableRow>
+                <TableCell colSpan={6} className="text-center font-bold text-xl">لا يوجد هواتف</TableCell>
+              </TableRow>}
           </TableBody>
         </Table> : isPhone === "Item" &&
         <div className='w-full font-sans font-semibold grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 text-right'>
@@ -201,8 +205,8 @@ export default function Tables() {
               setOpen(prev => ({ ...prev, [index]: !prev![index] }))
             }
             } key={index} className='border relative p-2 rounded-md cursor-pointer hover:bg-gray-100'>
-              <Image src={item.image || "/azal.png"} alt={''} width={100} height={100} className='w-full h-24 rounded-md object-cover mb-2' />
-              <h3 className=' my-1 '>الاسم: <span className='text-orange-500 mr-2'>{item.itemName}</span></h3>
+              <img src={item.image || "/azal.png"} alt={''} className='w-full h-24 rounded-md object-cover mb-2' />
+              <h3 className=' my-1 direction-reverse'>الاسم: <span className='text-orange-500 mr-2'>{item.itemName}</span></h3>
               <p className='text-sm my-3 '>السعر: <span className='text-blue-500 mr-2'>{item.price}</span></p>
               <p className='text-sm  '>العدد: <span className='text-blue-500 mr-2'>{item.length || 1}</span></p>
               <p className='text-sm mt-3'>التاريخ: <span className='text-blue-900 mr-2'>{item.createdAt ? item.createdAt.toLocaleDateString('en-CA').replaceAll('-', '/') : 'N/A'}</span></p>
