@@ -1,6 +1,5 @@
-'use client'
+"use client"
 import React, { useEffect, useState } from 'react'
-import Image from 'next/image'
 import {
   Table,
   TableBody,
@@ -22,7 +21,10 @@ export default function Tables() {
   const [open, setOpen] = useState<{ [key: number]: boolean }>({});
   const [isUpdate, setIsUpdate] = useState<{ [key: number]: boolean }>({});
   const [update, setUpdate] = useState<{ length: string, price: string, image: string }>({ image: '', length: '', price: '' });
-  const USER = localStorage.getItem("chosen");
+  const USER = typeof window !== "undefined"
+    ? localStorage.getItem("chosen")
+    : null;
+
 
   // Get Collaborators
   const [ownerID, setOwnerID] = useState<string>('')
