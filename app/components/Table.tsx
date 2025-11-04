@@ -14,7 +14,6 @@ import { DataPhones, ItemProps, PhoneProps } from './dataProvider'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Label } from '@/components/ui/label'
 
 
 export default function Tables() {
@@ -23,7 +22,7 @@ export default function Tables() {
   const [open, setOpen] = useState<{ [key: number]: boolean }>({});
   const [isUpdate, setIsUpdate] = useState<{ [key: number]: boolean }>({});
   const [update, setUpdate] = useState<{ length: string, price: string, image: string }>({ image: '', length: '', price: '' });
-
+  const USER = localStorage.getItem("chosen");
 
   // Get Collaborators
   const [ownerID, setOwnerID] = useState<string>('')
@@ -64,8 +63,10 @@ export default function Tables() {
     ? phones.filter(task => {
       // if no filter selected, show all
       if (!ownerID) return true;
-      return task.creator?.id === ownerID;
+      return task.creator?.id === ownerID || ownerID === 'all-users';
+
     })
+
     : [];
 
 
@@ -125,6 +126,9 @@ export default function Tables() {
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, length: String(Number(i.length) > 1 ? Number(i.length) - 1 : 0) } : i));
     setUpdate({ length: '', price: '', image: '' });
   }
+  useEffect(() => {
+    if (USER) setOwnerID(USER);
+  }, [USER]);
   return (
     <div className='lg:w-[1000px] mb-4 lg:mb-0 lg:mr-7 grid grid-cols-1'>
       <div className="flex items-center gap-x-2 mb-3">
@@ -142,21 +146,45 @@ export default function Tables() {
         </button>
 
         <div className="ml-12">
-          <Select onValueChange={(value) => {
-            setOwnerID(value)
-          }}>
+          <Select
+            value={ownerID}
+            onValueChange={(value) => {
+              setOwnerID(value);
+              localStorage.setItem("chosen", value);
+            }}>
             <SelectTrigger id="framework">
               <SelectValue placeholder="أختر" />
             </SelectTrigger>
             <SelectContent position="popper">
-              {collaborators ? collaborators.filter(
-                (user, index, self) =>
-                  index === self.findIndex(u => u.user.id === user.user.id)
-              ).map(item => {
-                return (
-                  <SelectItem className='cursor-pointer' key={item.user.id} value={item.user.id || 'كرار امير2'}>{item.user.name}</SelectItem>
-                )
-              }) : <SelectItem value="IOS">No Collaborators</SelectItem>}
+              {(() => {
+                if (!collaborators || collaborators.length === 0) {
+                  return <SelectItem value="IOS">No Collaborators</SelectItem>;
+                }
+
+                // Create a unique filtered list
+                const filtered = collaborators.filter(
+                  (user, index, self) =>
+                    index === self.findIndex(u => u.user.id === user.user.id)
+                );
+                // Render SelectItems
+                return (<>
+                  {
+                    filtered.map(item => (
+
+                      <SelectItem
+                        className="cursor-pointer"
+                        key={item.user.id}
+                        value={item.user.id || "كرار امير2"}
+                      >
+                        {item.user.name}
+                      </SelectItem>
+                    ))}
+                  <SelectItem
+                    value='all-users'
+                    className="cursor-pointer"
+                    key={"all-users"}>ALL</SelectItem>
+                </>)
+              })()}
             </SelectContent>
           </Select>
         </div>
