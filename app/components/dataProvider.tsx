@@ -21,7 +21,7 @@ export type PhoneProps = {
     id: string;
   };
   userId?: string,
-  isPaid?: []
+  currMonth?: boolean
 };
 
 export type ItemProps = {

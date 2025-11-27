@@ -19,6 +19,8 @@ export default function Tables() {
   const { showAlert, phones, setPhones, search, setFixPhones, setIsPhone, isPhone, items, setItems } = DataPhones();
   const router = useRouter()
   const [open, setOpen] = useState<{ [key: number]: boolean }>({});
+  const [allMoney, setAllMoney] = useState<number>(0);
+
   const [isUpdate, setIsUpdate] = useState<{ [key: number]: boolean }>({});
   const [update, setUpdate] = useState<{ length: string, price: string, image: string }>({ image: '', length: '', price: '' });
   const USER = typeof window !== "undefined"
@@ -60,16 +62,22 @@ export default function Tables() {
     getUserId()
   }, [])
 
-
   const filteredTasks = Array.isArray(phones)
     ? phones.filter(task => {
       // if no filter selected, show all
       if (!ownerID) return true;
       return task.creator?.id === ownerID || ownerID === 'all-users';
-
     })
 
+
     : [];
+  useEffect(() => {
+    const totalMoney = filteredTasks.reduce((sum, task) => {
+      return sum + Number(task.fixedCut || 0);
+    }, 0);
+
+    setAllMoney(totalMoney);
+  }, [filteredTasks])
 
 
 
@@ -115,6 +123,7 @@ export default function Tables() {
     setUpdate({ length: '', price: '', image: '' });
   }
   // But an Item
+
   async function BuyItem(item: { id: string }, index: number) {
     const EnvId = localStorage.getItem('envId');
     if (!EnvId) {
@@ -190,6 +199,7 @@ export default function Tables() {
             </SelectContent>
           </Select>
         </div>
+        <div className="ml-12 text-lg font-bold">All Cuts: <span className='text-blue-500'>{allMoney}</span></div>
       </div>
       <div className=' mx-auto max-h-[450px] overflow-y-auto relative w-full' style={{ scrollbarWidth: 'none' }}>
         {isPhone === "Phone" ? <Table>
@@ -200,13 +210,15 @@ export default function Tables() {
               <TableHead>Price</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Buyer</TableHead>
-              <TableHead>Profit</TableHead>
-              <TableHead className="text-right">Owned</TableHead>
+              <TableHead>Cut</TableHead>
+              <TableHead>Owned</TableHead>
+              <TableHead className="text-right">Recived</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {(Array.isArray(phones) && phones.length > 0) ?
               Array.isArray(phones) && filteredTasks.map((phone, index) => (
+
                 <TableRow className="cursor-pointer" onClick={() => router.push(phone.id!)} key={index}>
                   <TableCell className="font-medium w-3">{index + 1}</TableCell>
                   <TableCell className="font-medium">{phone.phoneName}</TableCell>
@@ -215,7 +227,11 @@ export default function Tables() {
                     {phone.createdAt ? phone.createdAt.toLocaleDateString('en-CA').replaceAll('-', '/') : 'N/A'}
                   </TableCell>
                   <TableCell className="font-sans font-semibold">{phone.buyerName}</TableCell>
-                  <TableCell className="font-sans font-semibold">{phone.profit}</TableCell>
+                  <TableCell className="font-sans font-semibold">{phone.fixedCut}</TableCell>
+                  <TableCell><div
+                    className={`size-5 rounded-full mx-auto ${phone.currMonth ? "bg-green-400" : "bg-red-400"
+                      }`}
+                  ></div></TableCell>
                   <TableCell className="text-right">{phone.creator ? phone.creator.name : 'Hussein'}</TableCell>
                 </TableRow>
               ))

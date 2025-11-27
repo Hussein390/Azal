@@ -195,8 +195,7 @@ export async function createPhone({phoneName, buyerName, buyerNumber, price, fir
     if (environment.ownerId !== user.id && !isCollaborator || isCollaborator?.role === 'VIEWER') {
       return new Error("You are not allowed to create");
     }
-  const number = String(Number(price) + Number(profit) - Number(firstPrice));
-    const months = Math.max(1, Math.ceil(Number(number) / parseInt(fixedCut!)))
+
     const phone = await db.phone.create({
       data: {
         phoneName,
@@ -207,6 +206,7 @@ export async function createPhone({phoneName, buyerName, buyerNumber, price, fir
         profit,
         fixedCut,
         type,
+        currMonth: false,
         environmentId,
         updatedPrice: String(Number(price) + Number(profit) - Number(firstPrice)),
         creatorId: userId || environment.ownerId,
@@ -361,7 +361,7 @@ export async function getMyPhone(id: string) {
     else return "Unknown Error occurred"
   }
 }
-export async function updatePhone({id, environmentId, updatedPrice, date, creatorId}: {id: string, environmentId: string, updatedPrice?: string, date?: string, creatorId?: string}) {
+export async function updatePhone({id, environmentId, updatedPrice, date, creatorId, currMonth}: {id: string, environmentId: string, updatedPrice?: string, date?: string, creatorId?: string, currMonth?: boolean}) {
   try {    
     const session = await auth();
   
@@ -423,6 +423,17 @@ export async function updatePhone({id, environmentId, updatedPrice, date, creato
         },
         data: {
           creatorId,
+        }
+      });
+      return phones
+    }
+    if (currMonth !== undefined) {
+      const phones = await db.phone.update({
+        where: {
+          id,
+        },
+        data: {
+          currMonth,
         }
       });
       return phones

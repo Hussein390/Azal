@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useState, useRef } from 'react'
 import { DataPhones, PhoneProps } from '../components/dataProvider'
-import { createIsPaid, deleteMyPhone, getEnvironmentById, getIsPaid, getMyPhone, updateIsPaid, updatePhone } from '../../backend/envirnoment';
+import { createIsPaid, deleteMyPhone, getEnvironmentById, getIsPaid, getMyPhone, updatePhone } from '../../backend/envirnoment';
 import {
   Table,
   TableBody,
@@ -160,7 +160,6 @@ export default function page({ params }: { params: Promise<{ phone: string }> })
           formattedData.push({ user: { id: collab.user.id, name: collab.user.name || '' } });
         }
       });
-      console.log(formattedData)
 
       setCollaborators(formattedData);
     } else {
@@ -182,6 +181,41 @@ export default function page({ params }: { params: Promise<{ phone: string }> })
   React.useEffect(() => {
     getUserId()
   }, [])
+
+  async function updateLastMonthPaid(value: boolean) {
+    const id = (await params).phone;
+    const environmentId = localStorage.getItem('envId')!;
+    const data = { id, environmentId, currMonth: value }
+    const res = await updatePhone(data);
+    if (res instanceof Error) showAlert(res.message, false)
+    handleGetPhone();
+    return
+  }
+
+  useEffect(() => {
+    if (!phone || isPriced.length === 0) return;
+
+    const maxPosition = Math.max(...isPriced.map(i => i.position));
+
+    const getDateForPosition = (pos: number) => {
+      const baseDate = phone.createdAt ? new Date(phone.createdAt) : new Date();
+      baseDate.setMonth(baseDate.getMonth() + pos);
+      return baseDate
+        .toLocaleDateString('en-CA')
+        .replaceAll('-', '/')
+        .match(/\/(\d{2})\//)?.[1];
+    };
+
+    const todayMonth = new Date()
+      .toLocaleDateString('en-CA')
+      .replaceAll('-', '/')
+      .match(/\/(\d{2})\//)?.[1];
+
+    const lastPaidMonth = getDateForPosition(maxPosition);
+
+    // ✔ Update state ONLY if value is different
+    updateLastMonthPaid(lastPaidMonth === todayMonth)
+  }, [phone?.createdAt, isPriced]);
   return (
     <div ref={PDFRef} style={{ direction: 'rtl' }} className='md:w-[920px]  mt-16 p-8 rounded-md border shadow-sm mx-auto  relative'>
       <div className="flex items-center gap-x-6 absolute -top-12 left-0">
@@ -280,6 +314,9 @@ export default function page({ params }: { params: Promise<{ phone: string }> })
                 // Ensure createdAt exists and clone it to avoid mutation
                 const date = phone?.createdAt ? new Date(phone.createdAt) : new Date();
                 date.setMonth(date.getMonth() + index); // Increment month
+
+
+
 
                 const remaining =
                   phone?.price && phone?.fixedCut

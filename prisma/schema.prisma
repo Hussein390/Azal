@@ -9,7 +9,7 @@ datasource db {
 
 //things
 model Phone {
-  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
   phoneName    String
   buyerName    String
   buyerNumber  String?
@@ -19,6 +19,7 @@ model Phone {
   fixedCut     String
   updatedPrice String
   type         String
+  currMonth    Boolean?
 
   environmentId String      @db.ObjectId
   creatorId     String      @db.ObjectId
