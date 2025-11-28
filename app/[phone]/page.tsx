@@ -27,19 +27,15 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-type isPaidProps = {
-  position: number,
-  id: string,
-  isPaid: boolean
-}
+
 export default function page({ params }: { params: Promise<{ phone: string }> }) {
-  const { showAlert } = DataPhones();
+  const { showAlert, isPriced, setIsPriced } = DataPhones();
   const [phone, setPhone] = useState<PhoneProps | null>(null);
   const [date, setDate] = useState('')
   const [changeOwner, setChangeOwner] = useState(false);
   const price = String(Number(phone?.price) + Number(phone?.profit) - Number(phone?.firstPrice));
   const months = Math.ceil(Number(price) / (parseInt(phone?.fixedCut!) || 50));
-  const [isPriced, setIsPriced] = useState<isPaidProps[]>([]);
+
   const PDFRef = useRef<HTMLDivElement | null>(null)
   const Router = useRouter()
   const nowDate = new Date();
@@ -104,8 +100,8 @@ export default function page({ params }: { params: Promise<{ phone: string }> })
   }
   useEffect(() => {
     handleGetPhone()
-
   }, [])
+
   const handlePayment = (id: number) => {
     setIsPaid((prev) => ({
       ...prev,
@@ -188,8 +184,8 @@ export default function page({ params }: { params: Promise<{ phone: string }> })
     const data = { id, environmentId, currMonth: value }
     const res = await updatePhone(data);
     if (res instanceof Error) showAlert(res.message, false)
-    handleGetPhone();
-    return
+
+    return handleGetPhone();
   }
 
   useEffect(() => {

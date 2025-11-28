@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Table,
   TableBody,
@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { createFixPhoneProps, deleteItem, get_Fix_Phones, getEnvironmentById, getItems, getPhone, updateItem } from '../../backend/envirnoment'
+import { createFixPhoneProps, deleteItem, get_Fix_Phones, getEnvironmentById, getItems, getPhone, updateItem, updatePhone } from '../../backend/envirnoment'
 import { DataPhones, ItemProps, PhoneProps } from './dataProvider'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
@@ -79,6 +79,15 @@ export default function Tables() {
     setAllMoney(totalMoney);
   }, [filteredTasks])
 
+  const totalMoney = useMemo(() => {
+    return filteredTasks.reduce((sum, task) =>
+      sum + Number(task.fixedCut || 0),
+      0);
+  }, [filteredTasks]);
+
+  useEffect(() => {
+    setAllMoney(totalMoney);
+  }, [totalMoney]);
 
 
 
@@ -137,11 +146,13 @@ export default function Tables() {
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, length: String(Number(i.length) > 1 ? Number(i.length) - 1 : 0) } : i));
     setUpdate({ length: '', price: '', image: '' });
   }
+
+
   useEffect(() => {
     if (USER) setOwnerID(USER);
   }, [USER]);
   return (
-    <div className='lg:w-[1000px] mb-4 lg:mb-0 lg:mr-7 grid grid-cols-1'>
+    <div className='lg:w-[1200px] mb-4 lg:mb-0 lg:mr-7 grid grid-cols-1'>
       <div className="flex items-center gap-x-2 mb-3">
         <button
           className={`${isPhone == "Item" ? 'bg-blue-400 text-white ' : ''} p-2 rounded-md border hover:bg-blue-500 hover:text-white`}
@@ -156,7 +167,7 @@ export default function Tables() {
           Phone
         </button>
 
-        <div className="ml-12">
+        <div className="md:ml-12">
           <Select
             value={ownerID}
             onValueChange={(value) => {
@@ -199,7 +210,7 @@ export default function Tables() {
             </SelectContent>
           </Select>
         </div>
-        <div className="ml-12 text-lg font-bold">All Cuts: <span className='text-blue-500'>{allMoney}</span></div>
+        <div className="md:ml-12 md:text-lg font-bold">All Cuts: <span className='text-blue-500'>{allMoney}</span></div>
       </div>
       <div className=' mx-auto max-h-[450px] overflow-y-auto relative w-full' style={{ scrollbarWidth: 'none' }}>
         {isPhone === "Phone" ? <Table>
@@ -211,8 +222,8 @@ export default function Tables() {
               <TableHead>Date</TableHead>
               <TableHead>Buyer</TableHead>
               <TableHead>Cut</TableHead>
-              <TableHead>Owned</TableHead>
-              <TableHead className="text-right">Recived</TableHead>
+              <TableHead >Recived</TableHead>
+              <TableHead className="text-right">Owned</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -223,16 +234,16 @@ export default function Tables() {
                   <TableCell className="font-medium w-3">{index + 1}</TableCell>
                   <TableCell className="font-medium">{phone.phoneName}</TableCell>
                   <TableCell>{phone.price}</TableCell>
-                  <TableCell>
+                  <TableCell >
                     {phone.createdAt ? phone.createdAt.toLocaleDateString('en-CA').replaceAll('-', '/') : 'N/A'}
                   </TableCell>
                   <TableCell className="font-sans font-semibold">{phone.buyerName}</TableCell>
                   <TableCell className="font-sans font-semibold">{phone.fixedCut}</TableCell>
                   <TableCell><div
-                    className={`size-5 rounded-full mx-auto ${phone.currMonth ? "bg-green-400" : "bg-red-400"
+                    className={`size-5 ml-4 rounded-full mx-auto ${phone.currMonth ? "bg-green-400" : "bg-red-400"
                       }`}
                   ></div></TableCell>
-                  <TableCell className="text-right">{phone.creator ? phone.creator.name : 'Hussein'}</TableCell>
+                  <TableCell className="text-right ">{phone.creator ? phone.creator.name : 'Hussein'}</TableCell>
                 </TableRow>
               ))
               : <TableRow>

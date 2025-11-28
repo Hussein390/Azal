@@ -1,5 +1,6 @@
 'use client'
 import { createFixPhoneProps } from "@/backend/envirnoment";
+import { isPaid } from "@prisma/client";
 import React, { createContext, ReactNode, useContext, useState, Dispatch, SetStateAction } from "react";
 
 // Define the type for days
@@ -39,6 +40,11 @@ export type ItemProps = {
   };
 };
 
+type isPaidProps = {
+  position: number,
+  id: string,
+  isPaid: boolean
+}
 // Define the context value type
 type IsOpenContextType = {
   search: { name: string, type: string },
@@ -52,6 +58,8 @@ type IsOpenContextType = {
   isPhone: string;
   setIsPhone: Dispatch<SetStateAction<string>>;
   showAlert: (message: string, isSuccess?: boolean) => void;  // ✅ Added showAlert
+  setIsPriced: Dispatch<SetStateAction<isPaidProps[]>>;
+  isPriced: isPaidProps[];
 };
 
 // Create the context with a proper default value
@@ -67,6 +75,8 @@ const DataContext = createContext<IsOpenContextType>({
   isPhone: '',
   setIsPhone: () => "Phone",
   showAlert: () => { },
+  setIsPriced: () => { },
+  isPriced: [],
 });
 
 // Create a provider component
@@ -78,6 +88,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const [search, setSearch] = React.useState<{ name: string, type: string }>({ name: '', type: '' });
   const [alertMessage, setAlertMessage] = React.useState<string | null>(null);
   const [alertSuccessMessage, setAlertSuccessMessage] = React.useState<string | null>(null);
+  const [isPriced, setIsPriced] = useState<isPaidProps[]>([]);
 
   function showAlert(message: string, isSuccess = false) {
     if (isSuccess) {
@@ -92,7 +103,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <DataContext.Provider value={{ search, setSearch, fixPhones, setFixPhones, phones, setPhones, setItems, items, isPhone, setIsPhone, showAlert }}>
+    <DataContext.Provider value={{ isPriced, setIsPriced, search, setSearch, fixPhones, setFixPhones, phones, setPhones, setItems, items, isPhone, setIsPhone, showAlert }}>
       {children}
       {(alertMessage || alertSuccessMessage) && (
         <div className={`fixed top-16 right-3 outline-2 ${alertSuccessMessage ? 'outline-green-600' : 'outline-red-600'}  outline rounded-md`}>
