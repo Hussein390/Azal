@@ -156,16 +156,51 @@ export default function Tables() {
   // But an Item
   async function BuyItem(item: { id: string }, index: number) {
     const EnvId = localStorage.getItem('envId');
+
     if (!EnvId) {
       console.error('Environment ID is missing!');
       return;
     }
-    const object = { environmentId: EnvId, id: item.id, length: update.length, sellPrice: update.sellPrice, boughtPrice: update.boughtPrice, text: update.text, installmentPrice: update.installmentPrice }
-    await updateItem(object);
-    setIsUpdate(prev => ({ ...prev, [index]: false }))
-    setOpen(prev => ({ ...prev, [index]: false }))
-    setItems(prev => prev.map(i => i.id === item.id ? { ...i, length: String(Number(i.length) > 1 ? Number(i.length) - 1 : 0) } : i));
-    setUpdate({ length: '', sellPrice: '', boughtPrice: '', text: '', installmentPrice: '' });
+
+    const currentItem = items.find(i => i.id === item.id);
+
+    if (currentItem && Number(currentItem.length) >= 1) {
+      showAlert('Item sold', true);
+
+      const object = {
+        environmentId: EnvId,
+        id: item.id,
+        length: update.length,
+        sellPrice: update.sellPrice,
+        boughtPrice: update.boughtPrice,
+        text: update.text,
+        installmentPrice: update.installmentPrice
+      };
+
+      await updateItem(object);
+
+      setIsUpdate(prev => ({ ...prev, [index]: false }));
+      setOpen(prev => ({ ...prev, [index]: false }));
+
+      setItems(prev =>
+        prev.map(i =>
+          i.id === item.id
+            ? { ...i, length: String(Number(i.length) - 1) }
+            : i
+        )
+      );
+
+      setUpdate({
+        length: '',
+        sellPrice: '',
+        boughtPrice: '',
+        text: '',
+        installmentPrice: ''
+      });
+
+    } else {
+      showAlert('The Item Is Not Available', false);
+    }
   }
 
   // Delete Item
@@ -354,6 +389,9 @@ export default function Tables() {
                         </button>
                         <button onClick={() => DeletItem(item)} className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600">
                           Delete
+                        </button>
+                        <button onClick={() => BuyItem(item, index)} className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600">
+                          Buy
                         </button>
                       </TableCell>}
                       {isUpdate[index] && <TableCell className="flex gap-x-3 items-center m-0">

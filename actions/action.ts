@@ -1,11 +1,12 @@
-import { signIn, signOut } from "next-auth/react";
-import { revalidatePath } from "next/cache";
 
-export const login = async (provider: string) => {
-  await signIn(provider, { redirectTo: "/" });
-  revalidatePath("/")
+"use server"
+
+import { signIn, signOut } from "@/auth"
+
+export async function login() {
+  await signIn("google")
 }
-export const logout = async () => {
-  await signOut({redirectTo: "/"});
-  revalidatePath("/")
+
+export async function logout() {
+  await signOut({ redirectTo: "/" })
 }

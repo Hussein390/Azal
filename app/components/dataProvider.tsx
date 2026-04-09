@@ -1,6 +1,6 @@
 'use client'
 import { createFixPhoneProps } from "@/backend/envirnoment";
-import { isPaid } from "@prisma/client";
+
 import React, { createContext, ReactNode, useContext, useState, Dispatch, SetStateAction } from "react";
 
 // Define the type for days
