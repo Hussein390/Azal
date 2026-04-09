@@ -1,5 +1,5 @@
 "use client"
-import { login, logout } from "@/actions/action"
+import { signIn, signOut } from "next-auth/react"
 import { Menubar, MenubarContent, MenubarItem, MenubarMenu } from "@/components/ui/menubar";
 import { MenubarTrigger } from "@radix-ui/react-menubar";
 import { useSession } from "next-auth/react";
@@ -14,7 +14,7 @@ export default function Profile() {
   if (!session) {
     return (
       <div>
-        <button className="p-1 border bg-blue-500 hover:text-stone-300 text-white m-2 rounded" onClick={() => login('google')}>Sign In</button>
+        <button className="p-1 border bg-blue-500 hover:text-stone-300 text-white m-2 rounded" onClick={() => signIn('google')}>Sign In</button>
       </div>
     );
   }
@@ -28,7 +28,7 @@ export default function Profile() {
           </div>
         </MenubarTrigger>
         <MenubarContent className="border-none">
-          <MenubarItem className="cursor-pointer " onClick={() => logout()}>Logout</MenubarItem>
+          <MenubarItem className="cursor-pointer " onClick={() => signOut()}>Logout</MenubarItem>
         </MenubarContent>
       </MenubarMenu>
     </Menubar>
