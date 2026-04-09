@@ -58,12 +58,14 @@ model isPaid {
 }
 
 model Item {
-  id       String  @id @default(auto()) @map("_id") @db.ObjectId
-  itemName String
-  price    String
-  image    String?
-  type     String
-  length   String?
+  id               String  @id @default(auto()) @map("_id") @db.ObjectId
+  itemName         String
+  sellPrice        String
+  boughtPrice      String
+  installmentPrice String
+  text             String?
+  type             String
+  length           String?
 
   environmentId String      @db.ObjectId
   creatorId     String?     @db.ObjectId

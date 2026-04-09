@@ -28,11 +28,13 @@ export type PhoneProps = {
 export type ItemProps = {
   id: string,
   itemName: string;
-  price: string;
+  sellPrice: string;
+  boughtPrice: string;
+  installmentPrice: string;
+  text?: string;
   type: string;
   createdAt?: Date;
   environmentId: string;
-  image?: string;
   userId?: string;
   length: string;
   creator?: {

@@ -22,7 +22,7 @@ export default function Tables() {
   const [allMoney, setAllMoney] = useState<number>(0);
 
   const [isUpdate, setIsUpdate] = useState<{ [key: number]: boolean }>({});
-  const [update, setUpdate] = useState<{ length: string, price: string, image: string }>({ image: '', length: '', price: '' });
+  const [update, setUpdate] = useState<{ length: string, sellPrice: string, text: string, boughtPrice: string, installmentPrice: string }>({ length: '', sellPrice: '', text: '', boughtPrice: '', installmentPrice: '' });
   const USER = typeof window !== "undefined"
     ? localStorage.getItem("chosen")
     : null;
@@ -124,30 +124,65 @@ export default function Tables() {
       console.error('Environment ID is missing!');
       return;
     }
-    const object = { environmentId: EnvId, id: item.id, length: update.length, price: update.price, image: update.image }
-    await updateItem(object);
-    setIsUpdate(prev => ({ ...prev, [index]: false }))
-    setOpen(prev => ({ ...prev, [index]: false }))
-    setItems(prev => prev.map(i => i.id === item.id ? { ...i, length: update.length, price: update.price } : i));
-    setUpdate({ length: '', price: '', image: '' });
+
+    const object: any = {
+      environmentId: EnvId,
+      id: item.id,
+    };
+
+    if (update.length) object.length = update.length;
+    if (update.sellPrice) object.sellPrice = update.sellPrice;
+    if (update.boughtPrice) object.boughtPrice = update.boughtPrice;
+    if (update.installmentPrice) object.installmentPrice = update.installmentPrice;
+    if (update.text) object.text = update.text;
+
+    const result = await updateItem(object);
+
+    if (!result) return;
+    await getPhones()
+    setIsUpdate(prev => ({ ...prev, [index]: false }));
+    setOpen(prev => ({ ...prev, [index]: false }));
+
+    setItems(prev =>
+      prev.map(i =>
+        i.id === item.id
+          ? { ...i, ...object }
+          : i
+      )
+    );
+
+    setUpdate({ length: '', sellPrice: '', boughtPrice: '', text: '', installmentPrice: '' });
   }
   // But an Item
-
   async function BuyItem(item: { id: string }, index: number) {
     const EnvId = localStorage.getItem('envId');
     if (!EnvId) {
       console.error('Environment ID is missing!');
       return;
     }
-    const object = { environmentId: EnvId, id: item.id, length: update.length, price: update.price, image: update.image }
+    const object = { environmentId: EnvId, id: item.id, length: update.length, sellPrice: update.sellPrice, boughtPrice: update.boughtPrice, text: update.text, installmentPrice: update.installmentPrice }
     await updateItem(object);
     setIsUpdate(prev => ({ ...prev, [index]: false }))
     setOpen(prev => ({ ...prev, [index]: false }))
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, length: String(Number(i.length) > 1 ? Number(i.length) - 1 : 0) } : i));
-    setUpdate({ length: '', price: '', image: '' });
+    setUpdate({ length: '', sellPrice: '', boughtPrice: '', text: '', installmentPrice: '' });
   }
 
+  // Delete Item
+  async function DeletItem(item: { id: string }) {
+    const EnvId = localStorage.getItem('envId');
+    if (!EnvId) {
+      console.error('Environment ID is missing!');
+      return;
+    }
 
+    const object: any = {
+      environmentId: EnvId,
+      id: item.id,
+    };
+    await deleteItem(object)
+    await getPhones()
+  }
   useEffect(() => {
     if (USER) setOwnerID(USER);
   }, [USER]);
@@ -210,7 +245,9 @@ export default function Tables() {
             </SelectContent>
           </Select>
         </div>
-        <div className="md:ml-12 md:text-lg font-bold">All Cuts: <span className='text-blue-500'>{allMoney}</span></div>
+        {isPhone === "Phone" &&
+          <div className="md:ml-12 md:text-lg font-bold">All Cuts: <span className='text-blue-500'>{allMoney}</span></div>
+        }
       </div>
       <div className=' mx-auto max-h-[450px] overflow-y-auto relative w-full' style={{ scrollbarWidth: 'none' }}>
         {isPhone === "Phone" ? <Table>
@@ -251,72 +288,90 @@ export default function Tables() {
               </TableRow>}
           </TableBody>
         </Table> : isPhone === "Item" &&
-        <div className='w-full font-sans font-semibold grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 text-right'>
-          {items.length >= 1 ? items.filter((task) => {
-            const name = search.name.toLowerCase() == '' ? task : task.itemName.toLowerCase().includes(search.name.toLowerCase())
-            const type = search.type.toLowerCase() == '' ? task : task.type.toLowerCase().includes(search.type.toLowerCase())
-            return name && type
-          }).map((item, index) => (
-            <div onClick={() => {
-              console.log(item.image)
-              setOpen(prev => ({ ...prev, [index]: !prev![index] }))
-            }
-            } key={index} className='border relative p-2 rounded-md cursor-pointer hover:bg-gray-100'>
-              <img src={item.image || "/azal.png"} alt={''} className='w-full h-24 rounded-md object-cover mb-2' />
-              <h3 className=' my-1 direction-reverse'>الاسم: <span className='text-orange-500 mr-2'>{item.itemName}</span></h3>
-              <p className='text-sm my-3 '>السعر: <span className='text-blue-500 mr-2'>{item.price}</span></p>
-              <p className='text-sm  '>العدد: <span className='text-blue-500 mr-2'>{item.length || 1}</span></p>
-              <p className='text-sm mt-3'>التاريخ: <span className='text-blue-900 mr-2'>{item.createdAt ? item.createdAt.toLocaleDateString('en-CA').replaceAll('-', '/') : 'N/A'}</span></p>
-              {open[index] &&
-                <div className="absolute top-0 left-0  bg-slate-600 rounded-md p-2 text-xs">
-                  <button onClick={() => BuyItem(item, index)} className='p-1 rounded cursor-pointer bg-green-400 hover:bg-green-300/55 duration-300 w-full'>Buy</button>
-                  <button onClick={() => setIsUpdate(prev => ({ ...prev, [index]: true }))} className='p-1 rounded cursor-pointer bg-slate-400 hover:bg-white/75 duration-300 w-full mt-3'>Update</button>
-                  <button onClick={async () => {
-                    const EnvId = localStorage.getItem('envId');
-                    if (!EnvId) {
-                      console.error('Environment ID is missing!');
-                      return;
-                    }
-                    const object = { environmentId: EnvId, id: item.id }
-                    await deleteItem(object);
-                    setItems(prev => prev.filter(i => i.id !== item.id));
-                  }} className='p-1 mt-3 rounded cursor-pointer bg-red-400 hover:bg-red-300/55 duration-300 w-full'>Delete</button>
-                </div>
-              }
-              {isUpdate[index] &&
-                <div className="absolute top-0 left-0 w-full h-auto bg-slate-600 rounded-md p-2 text-xs">
-                  <label className='text-white  font-semibold' htmlFor="length">العدد</label>
-                  <input value={update.length || item.length} onChange={e => setUpdate(prev => ({ ...prev, length: e.target.value }))} type="text" placeholder='Length' className='p-1 rounded w-full mb-2' />
-                  <label className='text-white  font-semibold' htmlFor="price">السعر</label>
-                  <input value={update.price || item.price} onChange={e => setUpdate(prev => ({ ...prev, price: e.target.value }))} type="number" placeholder='Price' className='p-1 rounded w-full mt-1' />
-                  <label className='text-white  font-semibold' htmlFor="price">صوره</label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    id="Image"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          setUpdate((prev) => ({ ...prev, image: reader.result as string }));
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                  />
-                  <div className="flex justify-between">
-                    <button onClick={() => UpdateItem(item, index)} className='p-1 rounded cursor-pointer bg-slate-400 hover:bg-white/75 duration-300 text-xs mt-3'>Update</button>
-                    <button onClick={() => {
-                      setOpen(prev => ({ ...prev, [index]: false }))
-                      setIsUpdate(prev => ({ ...prev, [index]: false }))
-                    }} className='p-1 rounded cursor-pointer bg-slate-400 hover:bg-white/75 duration-300 text-xs mt-3'>Cancel</button>
-                  </div>
-                </div>}
-            </div>
-          )
+        <div className='w-full font-sans font-semibold '>
 
-          ) : <p className='text-center'>No items found</p>}
+          < Table >
+            <TableHeader>
+              <TableRow className='border-b border-b-black'>
+                <TableHead className="w-fit">Count</TableHead>
+                <TableHead className="w-fit">Item Name</TableHead>
+                <TableHead>Bought Price</TableHead>
+                <TableHead>Sell Price</TableHead>
+                <TableHead>Installment Price</TableHead>
+                <TableHead>Length</TableHead>
+                <TableHead>Text</TableHead>
+                <TableHead >Date</TableHead>
+                <TableHead className="text-right">Owned</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody >
+              {Array.isArray(items) && items.length >= 1 ? (
+                items
+                  .filter((task) => {
+                    const name =
+                      search.name.toLowerCase() === ""
+                        ? true
+                        : task.itemName.toLowerCase().includes(search.name.toLowerCase());
+
+                    const type =
+                      search.type.toLowerCase() === ""
+                        ? true
+                        : task.type.toLowerCase().includes(search.type.toLowerCase());
+
+                    return name && type;
+                  }).map((item, index) => (
+
+                    <TableRow className="cursor-pointer select-none" onDoubleClick={() => setOpen(prev => ({ ...prev, [index]: !prev[index] }))} key={index}>
+                      <TableCell className="font-medium w-3">{index + 1}</TableCell>
+                      <TableCell className="font-medium">{item.itemName}</TableCell>
+                      <TableCell>{item.boughtPrice}</TableCell>
+                      <TableCell className="font-sans font-semibold">
+                        {item.sellPrice}
+                        {isUpdate[index] && <input value={update.sellPrice} onChange={(e) => setUpdate(prev => ({ ...prev, sellPrice: e.target.value }))} type="text" className='rounded-full ml-2 p-2 h-7 w-14 border-slate-400 border' />}
+                      </TableCell>
+                      <TableCell className="font-sans font-semibold">
+                        {item.installmentPrice}
+                        {isUpdate[index] && <input value={update.installmentPrice} onChange={(e) => setUpdate(prev => ({ ...prev, installmentPrice: e.target.value }))} type="text" className='rounded-full ml-2 p-2 h-7 w-14 border-slate-400 border' />}
+                      </TableCell>
+                      <TableCell className="font-sans font-semibold">
+                        {item.length}
+                        {isUpdate[index] && <input value={update.length} onChange={(e) => setUpdate(prev => ({ ...prev, length: e.target.value }))} type="text" className='rounded-full ml-2 p-2 h-7 w-14 border-slate-400 border' />}
+                      </TableCell>
+                      <TableCell className="font-sans font-semibold">
+                        {item.text}
+                        {isUpdate[index] && <input value={update.text} onChange={(e) => setUpdate(prev => ({ ...prev, text: e.target.value }))} type="text" className='rounded-full ml-2 p-2 h-7 w-14 border-slate-400 border' />}
+                      </TableCell>
+                      <TableCell >
+                        {item.createdAt ? item.createdAt.toLocaleDateString('en-CA').replaceAll('-', '/') : 'N/A'}
+                      </TableCell>
+                      <TableCell className="text-right select-none">{item.creator ? item.creator.name : 'Hussein'}</TableCell>
+                      {open[index] && <TableCell className="flex gap-x-3 items-center m-0">
+                        <button onClick={() => {
+                          setOpen(prev => ({ ...prev, [index]: false }))
+                          setIsUpdate(prev => ({ ...prev, [index]: !prev[index] }))
+                        }} className=" bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600">
+                          Edit
+                        </button>
+                        <button onClick={() => DeletItem(item)} className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600">
+                          Delete
+                        </button>
+                      </TableCell>}
+                      {isUpdate[index] && <TableCell className="flex gap-x-3 items-center m-0">
+                        <button onClick={() => {
+                          UpdateItem(item, index)
+                          setIsUpdate(prev => ({ ...prev, [index]: false }))
+                        }} className=" bg-green-500 text-white p-2 rounded-full hover:bg-green-600">
+                          Save
+                        </button>
+                        <button onClick={() => setIsUpdate(prev => ({ ...prev, [index]: false }))} className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600">
+                          Cancel
+                        </button>
+                      </TableCell>}
+                    </TableRow>
+                  )))
+                : <p className='text-center mt-3'>No items found</p>}
+            </TableBody>
+          </Table>
         </div>}
       </div>
     </div>

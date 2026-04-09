@@ -571,13 +571,15 @@ export type createItemProps = {
   id?: string
   itemName :   string
   type: string
-  image?: string
+  text?: string
   userId?: string
   length: string 
-  price:  string
+  sellPrice:  string
+  boughtPrice: string
+  installmentPrice: string
   environmentId: string
 }
-export async function createItem({itemName, type, environmentId, price, image, length, userId}: createItemProps) {
+export async function createItem({itemName, type, environmentId, sellPrice, boughtPrice, text, installmentPrice, length, userId}: createItemProps) {
   try {    
     const session = await auth();
   
@@ -613,9 +615,11 @@ export async function createItem({itemName, type, environmentId, price, image, l
     const phone = await db.item.create({
       data: {
         itemName,
-        image: image || "",
+        text: text || "",
         length: length,
-        price: price,
+        sellPrice: sellPrice,
+        boughtPrice: boughtPrice,
+        installmentPrice: installmentPrice,
         type,
         environmentId,
         creatorId: userId || environment.ownerId,
@@ -687,7 +691,7 @@ export async function getItems(environmentId: string) {
   }
 }
 
-export async function updateItem({ environmentId, price, length, image, id }: {environmentId: string, image: string, price: string, length: string, id: string}) {
+export async function updateItem({ environmentId, sellPrice, boughtPrice, installmentPrice, length, text, id }: {environmentId: string, sellPrice: string, boughtPrice: string, installmentPrice: string, length: string, text?: string, id: string}) {
   try {    
     const session = await auth();
   
@@ -699,11 +703,12 @@ export async function updateItem({ environmentId, price, length, image, id }: {e
       if (!user || !user.id) {
         return ("User Not Found");
     }
-    let data: { price?: string; length?: string, image?: string } = {};
-    if (price !== undefined) data.price = String(price);
+    let data: { sellPrice?: string; boughtPrice?: string; installmentPrice?: string; length?: string, text?: string } = {};
+    if (sellPrice !== undefined) data.sellPrice = String(sellPrice);
+    if (boughtPrice !== undefined) data.boughtPrice = String(boughtPrice);
+    if (installmentPrice !== undefined) data.installmentPrice = String(installmentPrice);
     if (length !== undefined) data.length = String(length);
-    if (length !== undefined) data.image = String(image);
-
+    
     const phones = await db.item.update({
       where: {
         id,

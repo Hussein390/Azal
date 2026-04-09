@@ -55,10 +55,12 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
   const [item, setItem] = React.useState<ItemProps>({
     id: '',
     itemName: '',
-    price: '',
+    installmentPrice: '',
+    sellPrice: '',
     type: 'Android',
     environmentId: '',
-    image: '',
+    boughtPrice: '',
+    text: '',
     userId: '',
     length: '1',
     creator: {
@@ -68,7 +70,7 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
   async function getPhones() {
     const EnvId = localStorage.getItem('envId')!;
 
-    if (isPhone === "Items") {
+    if (isPhone === "Item") {
       const data = await getItems(EnvId);
       setItems(data as ItemProps[]);
 
@@ -198,8 +200,8 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
         showAlert("Please enter a name", false);
         return;
       }
-      if (!item.price) {
-        showAlert("Please add a price", false);
+      if (!item.boughtPrice || !item.sellPrice) {
+        showAlert("Please add both bought and sell prices", false);
         return;
       }
 
@@ -221,9 +223,11 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
     setItem(prev => ({
       ...prev,
       itemName: '',
-      price: 'Android',
+      sellPrice: 'Android',
+      installmentPrice: '',
+      boughtPrice: '',
+      text: '',
       type: '',
-      image: '',
       userId: '',
       length: '1',
       creator: {
@@ -239,7 +243,7 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
     const res = await getEnvironmentById({ id: EnvId });
     // Check if res is a string (error message)
     if (typeof res === 'string') {
-      console.error("Failed to fetch environment:", res);
+      console.log("Failed to fetch environment:", res);
       return;
     }
 
@@ -295,12 +299,27 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
                   }} value={item.itemName} id="name" placeholder={'Phone Name'} className="appearance-none" />
                 </div>
                 <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="Price">السعر</Label>
+                  <Label htmlFor="BoughtPrice">سعر الشراء</Label>
                   <Input onChange={(e) => {
-                    setItem(prev => ({ ...prev, price: e.target.value }));
+                    setItem(prev => ({ ...prev, boughtPrice: e.target.value }));
 
-                  }} value={item.price} type="number" id="Price" placeholder={'Phone Price'} className="appearance-none" />
+                  }} value={item.boughtPrice} type="number" id="BoughtPrice" placeholder={'Bought Price'} className="appearance-none" />
                 </div>
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="Price">سعر البيع</Label>
+                  <Input onChange={(e) => {
+                    setItem(prev => ({ ...prev, sellPrice: e.target.value }));
+
+                  }} value={item.sellPrice} type="number" id="Price" placeholder={'Sell Price'} className="appearance-none" />
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="InstallmentPrice">سعر التقسيط</Label>
+                  <Input onChange={(e) => {
+                    setItem(prev => ({ ...prev, installmentPrice: e.target.value }));
+
+                  }} value={item.installmentPrice} type="number" id="InstallmentPrice" placeholder={'Installment Price'} className="appearance-none" />
+                </div>
+
                 <div className="flex flex-col space-y-1.5">
                   <Label htmlFor="Pieces">العدد</Label>
                   <Input onChange={(e) => {
@@ -309,24 +328,13 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
                   }} value={item.length} type="number" id="Pieces" placeholder={'Pieces'} className="appearance-none" />
                 </div>
                 <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="Image">صوره</Label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    id="Image"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          setItem((prev) => ({ ...prev, image: reader.result as string }));
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                  />
+                  <Label htmlFor="Notes">ملاحضات</Label>
+                  <Input onChange={(e) => {
+                    setItem(prev => ({ ...prev, text: e.target.value }));
 
+                  }} value={item.text} type="text" id="Notes" placeholder={'Notes'} className="appearance-none" />
                 </div>
+
               </div>
             </div>
           }
