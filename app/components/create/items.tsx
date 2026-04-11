@@ -63,6 +63,7 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
     text: '',
     userId: '',
     length: '1',
+    fixedLength: '1',
     creator: {
       name: ''
     }
@@ -230,6 +231,7 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
       type: '',
       userId: '',
       length: '1',
+      fixedLength: '1',
       creator: {
         name: ''
       }
@@ -320,6 +322,13 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
                   }} value={item.installmentPrice} type="number" id="InstallmentPrice" placeholder={'Installment Price'} className="appearance-none" />
                 </div>
 
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="Pieces">العدد الثابت</Label>
+                  <Input onChange={(e) => {
+                    setItem(prev => ({ ...prev, fixedLength: e.target.value }));
+
+                  }} value={item.fixedLength} type="number" id="Pieces" placeholder={'Pieces'} className="appearance-none" />
+                </div>
                 <div className="flex flex-col space-y-1.5">
                   <Label htmlFor="Pieces">العدد</Label>
                   <Input onChange={(e) => {

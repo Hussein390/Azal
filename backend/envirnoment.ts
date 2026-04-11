@@ -83,7 +83,7 @@ export async function getEnvironmentById({id}: {id: string}) {
       if (!user || !user.id) {
         return ("User Not Found");
     }
-    if(!id) return Error("Error--- Got no id!!")
+    if(!id) return console.log("Error--- Got no id!!")
     const envirnoment = await db.environment.findUnique({
       where: {
         id,
@@ -573,13 +573,14 @@ export type createItemProps = {
   type: string
   text?: string
   userId?: string
-  length: string 
+  length: string
+  fixedLength?: string,
   sellPrice:  string
   boughtPrice: string
   installmentPrice: string
   environmentId: string
 }
-export async function createItem({itemName, type, environmentId, sellPrice, boughtPrice, text, installmentPrice, length, userId}: createItemProps) {
+export async function createItem({itemName, type, environmentId, sellPrice, boughtPrice, text, installmentPrice, length, fixedLength, userId}: createItemProps) {
   try {    
     const session = await auth();
   
@@ -617,6 +618,8 @@ export async function createItem({itemName, type, environmentId, sellPrice, boug
         itemName,
         text: text || "",
         length: length,
+        fixedLength,
+        
         sellPrice: sellPrice,
         boughtPrice: boughtPrice,
         installmentPrice: installmentPrice,
@@ -691,7 +694,26 @@ export async function getItems(environmentId: string) {
   }
 }
 
-export async function updateItem({ environmentId, sellPrice, boughtPrice, installmentPrice, length, text, id }: {environmentId: string, sellPrice: string, boughtPrice: string, installmentPrice: string, length: string, text?: string, id: string}) {
+
+type UpdateItemInput = {
+  environmentId: string;
+  id: string;
+  sellPrice?: string;
+  boughtPrice?: string;
+  installmentPrice?: string;
+  length?: string;
+  fixedLength?: string;
+  text?: string;
+};
+export async function updateItem({
+  environmentId,
+  id,
+  sellPrice,
+  boughtPrice,
+  installmentPrice,
+  length,
+  fixedLength,
+}: UpdateItemInput) {
   try {    
     const session = await auth();
   
@@ -703,11 +725,12 @@ export async function updateItem({ environmentId, sellPrice, boughtPrice, instal
       if (!user || !user.id) {
         return ("User Not Found");
     }
-    let data: { sellPrice?: string; boughtPrice?: string; installmentPrice?: string; length?: string, text?: string } = {};
-    if (sellPrice !== undefined) data.sellPrice = String(sellPrice);
-    if (boughtPrice !== undefined) data.boughtPrice = String(boughtPrice);
-    if (installmentPrice !== undefined) data.installmentPrice = String(installmentPrice);
-    if (length !== undefined) data.length = String(length);
+    let data: { sellPrice?: string; boughtPrice?: string; installmentPrice?: string; length?: string, fixedLength?: string, text?: string } = {};
+    if (sellPrice !== undefined && sellPrice !== "") data.sellPrice = String(sellPrice);
+    if (boughtPrice !== undefined && boughtPrice !== "") data.boughtPrice = String(boughtPrice);
+    if (installmentPrice !== undefined && installmentPrice !== "") data.installmentPrice = String(installmentPrice);
+    if (length !== undefined && length !== "") data.length = String(length);
+    if (fixedLength !== undefined && fixedLength !== "") data.fixedLength = String(fixedLength);
     
     const phones = await db.item.update({
       where: {

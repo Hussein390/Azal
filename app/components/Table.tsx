@@ -8,21 +8,29 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { createFixPhoneProps, deleteItem, get_Fix_Phones, getEnvironmentById, getItems, getPhone, updateItem, updatePhone } from '../../backend/envirnoment'
+import { createFixPhoneProps, deleteItem, get_Fix_Phones, getEnvironmentById, getItems, getPhone, updateItem} from '../../backend/envirnoment'
 import { DataPhones, ItemProps, PhoneProps } from './dataProvider'
 import { useRouter } from 'next/navigation'
-import { Input } from '@/components/ui/input'
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
-
+type UpdateState = {
+  length?: string;
+  fixedLength?: string;
+  sellPrice?: string;
+  text?: string;
+  boughtPrice?: string;
+  installmentPrice?: string;
+};
 export default function Tables() {
   const { showAlert, phones, setPhones, search, setFixPhones, setIsPhone, isPhone, items, setItems } = DataPhones();
   const router = useRouter()
   const [open, setOpen] = useState<{ [key: number]: boolean }>({});
   const [allMoney, setAllMoney] = useState<number>(0);
+  const [allItemsMoney, setAllItemsMoney] = useState<{sellPrice: number, installmentsPrice: number, boughtPrice: number}>({sellPrice: 0, boughtPrice: 0,installmentsPrice:0});
 
   const [isUpdate, setIsUpdate] = useState<{ [key: number]: boolean }>({});
-  const [update, setUpdate] = useState<{ length: string, sellPrice: string, text: string, boughtPrice: string, installmentPrice: string }>({ length: '', sellPrice: '', text: '', boughtPrice: '', installmentPrice: '' });
+  const [update, setUpdate] = useState<UpdateState>({});
   const USER = typeof window !== "undefined"
     ? localStorage.getItem("chosen")
     : null;
@@ -71,6 +79,7 @@ export default function Tables() {
 
 
     : [];
+
   useEffect(() => {
     const totalMoney = filteredTasks.reduce((sum, task) => {
       return sum + Number(task.fixedCut || 0);
@@ -85,9 +94,26 @@ export default function Tables() {
       0);
   }, [filteredTasks]);
 
+  const totalItemsMoney = useMemo(() => {
+    const boughtPrice =  items.reduce((sum, task) =>
+      sum + Number(task.boughtPrice || 0),
+      0);
+    const sellPrice =  items.reduce((sum, task) =>
+      sum + Number(task.sellPrice || 0),
+      0);
+    const installmentsPrice =  items.reduce((sum, task) =>
+      sum + Number(task.installmentPrice || 0),
+      0);
+
+      return {boughtPrice, sellPrice, installmentsPrice}
+  }, [items]);
+
   useEffect(() => {
     setAllMoney(totalMoney);
   }, [totalMoney]);
+  useEffect(() => {
+    setAllItemsMoney(totalItemsMoney);
+  }, [totalItemsMoney]);
 
 
 
@@ -130,11 +156,12 @@ export default function Tables() {
       id: item.id,
     };
 
-    if (update.length) object.length = update.length;
-    if (update.sellPrice) object.sellPrice = update.sellPrice;
-    if (update.boughtPrice) object.boughtPrice = update.boughtPrice;
-    if (update.installmentPrice) object.installmentPrice = update.installmentPrice;
-    if (update.text) object.text = update.text;
+    if (update.length !== undefined) object.length = update.length;
+    if (update.fixedLength !== undefined) object.fixedLength = update.fixedLength;
+    if (update.sellPrice !== undefined) object.sellPrice = update.sellPrice;
+    if (update.boughtPrice !== undefined) object.boughtPrice = update.boughtPrice;
+    if (update.installmentPrice !== undefined) object.installmentPrice = update.installmentPrice;
+    if (update.text !== undefined) object.text = update.text;
 
     const result = await updateItem(object);
 
@@ -150,8 +177,8 @@ export default function Tables() {
           : i
       )
     );
-
-    setUpdate({ length: '', sellPrice: '', boughtPrice: '', text: '', installmentPrice: '' });
+    
+    setUpdate({ });
   }
   // But an Item
   async function BuyItem(item: { id: string }, index: number) {
@@ -171,6 +198,8 @@ export default function Tables() {
         environmentId: EnvId,
         id: item.id,
         length: update.length,
+        fixedLength: update.fixedLength,
+        
         sellPrice: update.sellPrice,
         boughtPrice: update.boughtPrice,
         text: update.text,
@@ -190,13 +219,7 @@ export default function Tables() {
         )
       );
 
-      setUpdate({
-        length: '',
-        sellPrice: '',
-        boughtPrice: '',
-        text: '',
-        installmentPrice: ''
-      });
+      setUpdate({});
 
     } else {
       showAlert('The Item Is Not Available', false);
@@ -204,7 +227,7 @@ export default function Tables() {
   }
 
   // Delete Item
-  async function DeletItem(item: { id: string }) {
+  async function DeletItem(item: { id: string }, index: number) {
     const EnvId = localStorage.getItem('envId');
     if (!EnvId) {
       console.error('Environment ID is missing!');
@@ -216,6 +239,7 @@ export default function Tables() {
       id: item.id,
     };
     await deleteItem(object)
+    setOpen(prev => ({ ...prev, [index]: false }))
     await getPhones()
   }
   useEffect(() => {
@@ -283,8 +307,15 @@ export default function Tables() {
         {isPhone === "Phone" &&
           <div className="md:ml-12 md:text-lg font-bold">All Cuts: <span className='text-blue-500'>{allMoney}</span></div>
         }
+        {isPhone === "Item" &&
+          <div className="md:ml-12 font-semibold flex items-center gap-x-5">
+            <div>Bought Price: <span className='text-blue-600'>{allItemsMoney.boughtPrice}</span></div>
+            <div>Sell Price: <span className='text-green-600'>{allItemsMoney.sellPrice}</span></div>
+            <div>Instalment Price: <span className='text-yellow-600'>{allItemsMoney.installmentsPrice}</span></div>
+          </div>
+        }
       </div>
-      <div className=' mx-auto max-h-[450px] overflow-y-auto relative w-full' style={{ scrollbarWidth: 'none' }}>
+      <div className=' mx-auto max-h-[650px] overflow-y-auto relative w-full' style={{ scrollbarWidth: 'none' }}>
         {isPhone === "Phone" ? <Table>
           <TableHeader>
             <TableRow className='border-b border-b-black'>
@@ -333,6 +364,7 @@ export default function Tables() {
                 <TableHead>Bought Price</TableHead>
                 <TableHead>Sell Price</TableHead>
                 <TableHead>Installment Price</TableHead>
+                <TableHead>Fixed Length</TableHead>
                 <TableHead>Length</TableHead>
                 <TableHead>Text</TableHead>
                 <TableHead >Date</TableHead>
@@ -356,25 +388,29 @@ export default function Tables() {
                     return name && type;
                   }).map((item, index) => (
 
-                    <TableRow className="cursor-pointer select-none" onDoubleClick={() => setOpen(prev => ({ ...prev, [index]: !prev[index] }))} key={index}>
+                    <TableRow className="cursor-pointer select-none text-center" onDoubleClick={() => setOpen(prev => ({ ...prev, [index]: !prev[index] }))} key={index}>
                       <TableCell className="font-medium w-3">{index + 1}</TableCell>
-                      <TableCell className="font-medium">{item.itemName}</TableCell>
-                      <TableCell>{item.boughtPrice}</TableCell>
-                      <TableCell className="font-sans font-semibold">
+                      <TableCell className="font-medium text-left">{item.itemName}</TableCell>
+                      <TableCell className='text-blue-600'>{item.boughtPrice}</TableCell>
+                      <TableCell className="font-sans font-semibold text-green-600">
                         {item.sellPrice}
                         {isUpdate[index] && <input value={update.sellPrice} onChange={(e) => setUpdate(prev => ({ ...prev, sellPrice: e.target.value }))} type="text" className='rounded-full ml-2 p-2 h-7 w-14 border-slate-400 border' />}
                       </TableCell>
-                      <TableCell className="font-sans font-semibold">
+                      <TableCell className="font-sans font-semibold text-red-600">
                         {item.installmentPrice}
                         {isUpdate[index] && <input value={update.installmentPrice} onChange={(e) => setUpdate(prev => ({ ...prev, installmentPrice: e.target.value }))} type="text" className='rounded-full ml-2 p-2 h-7 w-14 border-slate-400 border' />}
+                      </TableCell>
+                      <TableCell className="font-sans font-semibold text-yellow-600">
+                        {item.fixedLength}
+                        {/* {isUpdate[index] && <input value={update.fixedLength} onChange={(e) => setUpdate(prev => ({ ...prev, fixedLength: e.target.value }))} type="text" className='rounded-full ml-2 p-2 h-7 w-14 border-slate-400 border' />} */}
                       </TableCell>
                       <TableCell className="font-sans font-semibold">
                         {item.length}
                         {isUpdate[index] && <input value={update.length} onChange={(e) => setUpdate(prev => ({ ...prev, length: e.target.value }))} type="text" className='rounded-full ml-2 p-2 h-7 w-14 border-slate-400 border' />}
                       </TableCell>
-                      <TableCell className="font-sans font-semibold">
+                      <TableCell className="font-sans font-semibold text-blue-600">
                         {item.text}
-                        {isUpdate[index] && <input value={update.text} onChange={(e) => setUpdate(prev => ({ ...prev, text: e.target.value }))} type="text" className='rounded-full ml-2 p-2 h-7 w-14 border-slate-400 border' />}
+                        {isUpdate[index] && <input  value={update.text} onChange={(e) => setUpdate(prev => ({ ...prev, text: e.target.value }))} type="text" className='rounded-full ml-2 p-2 h-7 w-14 border-slate-400 border' />}
                       </TableCell>
                       <TableCell >
                         {item.createdAt ? item.createdAt.toLocaleDateString('en-CA').replaceAll('-', '/') : 'N/A'}
@@ -387,7 +423,7 @@ export default function Tables() {
                         }} className=" bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600">
                           Edit
                         </button>
-                        <button onClick={() => DeletItem(item)} className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600">
+                        <button onClick={() => DeletItem(item, index)} className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600">
                           Delete
                         </button>
                         <button onClick={() => BuyItem(item, index)} className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600">

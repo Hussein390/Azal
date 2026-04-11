@@ -37,6 +37,7 @@ export type ItemProps = {
   environmentId: string;
   userId?: string;
   length: string;
+  fixedLength?: string
   creator?: {
     name: string;
   };

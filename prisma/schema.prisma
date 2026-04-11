@@ -66,6 +66,7 @@ model Item {
   text             String?
   type             String
   length           String?
+  fixedLength      String?
 
   environmentId String      @db.ObjectId
   creatorId     String?     @db.ObjectId
