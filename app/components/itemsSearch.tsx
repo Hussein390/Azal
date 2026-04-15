@@ -3,7 +3,6 @@ import * as React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataPhones } from './dataProvider';
 
 export function ItemsSearch() {
@@ -33,24 +32,7 @@ export function ItemsSearch() {
                   placeholder="Item | Phone Name"
                 />
               </div>
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="framework">System</Label>
-                <Select
-                  value={search.type}
-                  onValueChange={(value) => {
-                    setSearch(prev => ({ ...prev, type: value }))
-                  }}
-                >
-                  <SelectTrigger id="framework">
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent position="popper">
-                    <SelectItem value="IOS">IOS</SelectItem>
-                    <SelectItem value="Android">Android</SelectItem>
-                    <SelectItem value="Items">Items</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              
             </div>
           </form>
         </CardContent>

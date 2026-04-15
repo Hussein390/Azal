@@ -74,7 +74,9 @@ export default function Tables() {
     ? phones.filter(task => {
       // if no filter selected, show all
       if (!ownerID) return true;
-      return task.creator?.id === ownerID || ownerID === 'all-users';
+      const name = search.name.toLowerCase() === "" ? true
+                        : task.buyerName!.toLowerCase().includes(search.name.toLowerCase());
+      return  task.creator?.id === ownerID || ownerID === 'all-users' && name;
     })
 
 
@@ -182,49 +184,53 @@ export default function Tables() {
   }
   // But an Item
   async function BuyItem(item: { id: string }, index: number) {
-    const EnvId = localStorage.getItem('envId');
+  const EnvId = localStorage.getItem('envId');
 
-    if (!EnvId) {
-      console.error('Environment ID is missing!');
-      return;
-    }
+  if (!EnvId) {
+    console.error('Environment ID is missing!');
+    return;
+  }
 
-    const currentItem = items.find(i => i.id === item.id);
+  const currentItem = items.find(i => i.id === item.id);
 
-    if (currentItem && Number(currentItem.length) >= 1) {
-      showAlert('Item sold', true);
+  if (currentItem && Number(currentItem.length) >= 1) {
+    const decreasedLength = String(Number(currentItem.length) - 1);
+    
+    const object = {
+      environmentId: EnvId,
+      id: item.id,
+      length: decreasedLength, // Use decreased length, not update.length
+      fixedLength: update.fixedLength,
+      sellPrice: update.sellPrice,
+      boughtPrice: update.boughtPrice,
+      text: update.text,
+      installmentPrice: update.installmentPrice
+    };
 
-      const object = {
-        environmentId: EnvId,
-        id: item.id,
-        length: update.length,
-        fixedLength: update.fixedLength,
-        
-        sellPrice: update.sellPrice,
-        boughtPrice: update.boughtPrice,
-        text: update.text,
-        installmentPrice: update.installmentPrice
-      };
-
-      await updateItem(object);
-
+     await updateItem(object);
+    
+    
+      showAlert(`Item purchased! Remaining: ${decreasedLength}`, true);
+      
       setIsUpdate(prev => ({ ...prev, [index]: false }));
       setOpen(prev => ({ ...prev, [index]: false }));
 
+      // Update local state to match server
       setItems(prev =>
         prev.map(i =>
           i.id === item.id
-            ? { ...i, length: String(Number(i.length) - 1) }
+            ? { ...i, length: decreasedLength }
             : i
         )
       );
 
       setUpdate({});
-
     } else {
-      showAlert('The Item Is Not Available', false);
+      showAlert('Failed to update item on server', false);
+      // Optionally refresh data from server to sync
     }
-  }
+  
+}
 
   // Delete Item
   async function DeletItem(item: { id: string }, index: number) {
@@ -379,13 +385,7 @@ export default function Tables() {
                       search.name.toLowerCase() === ""
                         ? true
                         : task.itemName.toLowerCase().includes(search.name.toLowerCase());
-
-                    const type =
-                      search.type.toLowerCase() === ""
-                        ? true
-                        : task.type.toLowerCase().includes(search.type.toLowerCase());
-
-                    return name && type;
+                    return name ;
                   }).map((item, index) => (
 
                     <TableRow className="cursor-pointer select-none text-center" onDoubleClick={() => setOpen(prev => ({ ...prev, [index]: !prev[index] }))} key={index}>
