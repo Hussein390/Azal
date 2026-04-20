@@ -91,60 +91,6 @@ export default function Search() {
       ) : (
         <p>No environment found</p>
       )}
-      {/* <Table className=''>
-        <TableHeader >
-          <TableRow className='w-full '>
-            <TableHead className='text-nowrap text-black'>المبلغ الكلي</TableHead>
-            <TableHead className='text-nowrap text-black'>القطع الشهري</TableHead>
-            <TableHead className='text-nowrap text-black'>المبلغ بعد القطع</TableHead>
-            <TableHead className='text-nowrap text-black' >الأشهر المتبقية</TableHead>
-            <TableHead className='text-nowrap text-black' >تاريخ</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Array.from({ length: months + 1 }, (_, index) => {
-            // Ensure createdAt exists and clone it to avoid mutation
-            const date = phone?.createdAt ? new Date(phone.createdAt) : new Date();
-            date.setMonth(date.getMonth() + index); // Increment month
-
-            // Calculate remaining amount
-            const price = String(Number(phone?.price) + Number(phone?.profit));
-
-            const remainingAmount2 =
-              phone?.updatedPrice && phone?.fixedCut
-                ? parseInt(phone.updatedPrice) - parseInt(phone.fixedCut) * (index - 1)
-                : 150;
-
-            const remainingAmount =
-              parseInt(phone?.fixedCut!) > remainingAmount2 ? 0
-                : parseInt(phone?.updatedPrice!) - parseInt(phone?.fixedCut!) * index;
-            // Determine installment amount
-            const installment =
-              parseInt(phone?.fixedCut!) > remainingAmount2 ? remainingAmount2 : phone?.fixedCut;
-
-            return (
-              <>
-                <TableRow key={index} onDoubleClick={() => handlePayment(index)} className='relative '>
-                  <TableCell className="text-black text-center">{index === 0 ? price : remainingAmount2}</TableCell>
-                  <TableCell className='text-red-700 text-center'>{installment}</TableCell>
-                  <TableCell className='text-blue-700 text-center '>{String(remainingAmount)}</TableCell>
-                  <TableCell className='text-center text-black'>{months - index}</TableCell>
-                  <TableCell className="text-center">
-                    {date.toLocaleDateString('en-CA').replaceAll('-', '/')}
-                  </TableCell>
-                  {isPaid[index] === true && <TableCell className=' bg-white z-20 absolute top-0 right-0 p-2 rounded-md border w-[200px]'>
-                    <p className="font-semibold text-center mb-3">هل استلمت المبلغ؟</p>
-                    <div className="flex justify-between items-center">
-                      <Button className='bg-green-500 delay-100 hover:bg-green-400 font-semibold text-white' onClick={() => handlePayment(index)}>نعم</Button>
-                      <Button className='bg-green-500 delay-100 hover:bg-green-400 font-semibold text-white' onClick={() => handlePayment(index)}>لا</Button>
-                    </div>
-                  </TableCell>}
-                </TableRow>
-              </>
-            );
-          })}
-        </TableBody>
-      </Table> */}
     </div>
   );
 }

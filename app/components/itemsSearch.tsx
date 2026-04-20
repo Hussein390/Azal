@@ -15,7 +15,7 @@ export function ItemsSearch() {
       <Card className="w-[300px]">
         <CardHeader>
           <CardTitle>Search</CardTitle>
-          <CardDescription>You can search for Phones & Items</CardDescription>
+          <CardDescription>You can search for items</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={(e) => e.preventDefault()}>

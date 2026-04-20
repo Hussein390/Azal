@@ -19,7 +19,7 @@ export default function Phones({ phone, setPhone, open, collaborators, setItem }
     <div id='main' className="flex justify-between gap-x-4 w-full items-start gap-4">
       <div className="w-full flex flex-col gap-y-3">
         <div className="flex flex-col space-y-1.5">
-          <Label htmlFor="name">أسم الهاتف</Label>
+          <Label htmlFor="name">أسم القسط</Label>
           <Input onChange={(e) => {
             setPhone(prev => ({ ...prev, phoneName: e.target.value }));
           }} value={phone.phoneName} id="name" placeholder={'Phone Name'} className="appearance-none" />

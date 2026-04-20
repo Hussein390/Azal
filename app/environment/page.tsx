@@ -8,28 +8,14 @@ import { CreateEnvironment } from './components/createEnvirnoment'
 import { JoinEnvironment } from '../components/joinEvironment'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { DataPhones } from '../components/dataProvider'
 
-type collaboratorsProps = {
-  role: string,
-  user: {
-    id: string,
-    name: string,
-    image: string
-  }
-}
-type envirnomentProps = {
-  id: string,
-  name: string,
-  owner: { name: string },
-  password: string,
-  phones: { creatorId: string, profit: string, price: string }[],
-  items: any,
-  collaborators: collaboratorsProps[],
-}
+
 
 export default function Page() {
+  const { EnvironmentName } = DataPhones();
+  
   const [isOpen, setIsOpen] = useState<string | null>(null);
-  const [envirnoment, setEnvironment] = useState<envirnomentProps>();
   const [collaborators, setCollaborators] = useState<string>();
   const [role, setRole] = useState<"VIEWER" | "ADMIN">("VIEWER");
   const [envId, setEnvId] = useState<string | null>(() =>
@@ -53,19 +39,7 @@ export default function Page() {
     getRole()
   }, [])
 
-  useEffect(() => {
-
-    async function fetchEnvironment() {
-      try {
-        const data = await getEnvironmentById({ id: envId! });
-        setEnvironment(data as envirnomentProps);
-        console.log(data)
-      } catch (err) {
-        console.error(err);
-      }
-    }
-    fetchEnvironment();
-  }, [envId]);
+ 
 
   return (
     <div className='max-w-5xl mx-auto mt-6 relative'>
@@ -78,34 +52,34 @@ export default function Page() {
 
       </div>
 
-      {envirnoment ? (
+      {EnvironmentName ? (
         <div className="p-6 rounded-md border shadow mt-4 flex items-start justify-between flex-col md:flex-row">
           <div>
             <p className="my-2 font-sans font-semibold " style={{ direction: 'rtl' }}>
-              أسم بيأت العمل: <span className='ml-1 text-blue-500'>{envirnoment.name}</span>
+              أسم بيأت العمل: <span className='ml-1 text-blue-500'>{EnvironmentName.name}</span>
             </p>
             <p className="my-2 font-sans font-semibold" style={{ direction: 'rtl' }}>
-              المالك: <span className='mr-1 text-green-500'>{envirnoment.owner.name}</span>
-            </p>
-
-            <p className="my-2 font-sans font-semibold" style={{ direction: 'rtl' }}>
-              الهواتف: <span className='mr-1 text-blue-500'>{envirnoment.phones.length}</span>
+              المالك: <span className='mr-1 text-green-500'>{EnvironmentName.owner.name}</span>
             </p>
 
             <p className="my-2 font-sans font-semibold" style={{ direction: 'rtl' }}>
-              اشياء: <span className='mr-1 text-lime-600'>{envirnoment.items.length}</span>
+              الاقساط: <span className='mr-1 text-blue-500'>{EnvironmentName.phones.length}</span>
+            </p>
+
+            <p className="my-2 font-sans font-semibold" style={{ direction: 'rtl' }}>
+              اشياء: <span className='mr-1 text-lime-600'>{EnvironmentName.items.length}</span>
             </p>
           </div>
 
           <div>
             <p className="my-2 font-sans font-semibold" style={{ direction: 'rtl' }}>
-              المساهمين: <span className='mr-1 text-green-500'>{envirnoment.collaborators.length}</span>
+              المساهمين: <span className='mr-1 text-green-500'>{EnvironmentName.collaborators.length}</span>
             </p>
             <p className="my-2 font-sans font-semibold" style={{ direction: 'rtl' }}>
-              الايدي: <span className='mr-1 text-lime-600'>{envirnoment.id}</span>
+              الايدي: <span className='mr-1 text-lime-600'>{EnvironmentName.id}</span>
             </p>
             <p className="my-2 font-sans font-semibold" style={{ direction: 'rtl' }}>
-              الرمز: <span className='mr-1 text-cyan-600'>{envirnoment.password}</span>
+              الرمز: <span className='mr-1 text-cyan-600'>{EnvironmentName.password}</span>
             </p>
           </div>
         </div>
@@ -114,38 +88,38 @@ export default function Page() {
       <div className="p-3 rounded-md border mt-2 flex items-start justify-between flex-col md:flex-row gap-y-2 md:gap-y-0">
         <div>
           <Image
-            src={envirnoment?.collaborators?.find(item => item.user.name === (collaborators || "Hussein Salim"))?.user.image || "/azal.png"}
+            src={EnvironmentName?.collaborators?.find(item => item.user.name === (collaborators || "Hussein Salim"))?.user.image || "/azal.png"}
             width={150}
             height={150}
-            alt={envirnoment?.collaborators?.[0]?.user?.name || "Missing"}
+            alt={EnvironmentName?.collaborators?.[0]?.user?.name || "Missing"}
             className='rounded-md shadow'
           />
           <h2 className="text-lg  mt-2 font-semibold">
-            {envirnoment?.collaborators?.find(item => item.user.name === (collaborators || "Hussein Salim"))?.user.name || "Missing"}
+            {EnvironmentName?.collaborators?.find(item => item.user.name === (collaborators || "Hussein Salim"))?.user.name || "Missing"}
           </h2>
         </div>
         <div className="flex justify-between items-start gap-x-5 ">
           <div className="w-20 mt-1">
             <p className="text-nowrap">
               invested money: <span className='text-green-600 font-semibold'>{
-                envirnoment?.phones
-                  ?.filter(item => item.creatorId === envirnoment?.collaborators?.find(collab => collab.user.name === (collaborators ?? "Hussein Salim"))?.user.id)
+                EnvironmentName?.phones
+                  ?.filter(item => item.creatorId === EnvironmentName?.collaborators?.find(collab => collab.user.name === (collaborators ?? "Hussein Salim"))?.user.id)
                   ?.reduce((total, item) => total + Number(item.price || 0), 0) // Summing profit
               }
               </span>
             </p>
             <p className="text-nowrap mt-2">
               profit: <span className='text-green-600 font-semibold'>{
-                envirnoment?.phones
-                  ?.filter(item => item.creatorId === envirnoment?.collaborators?.find(collab => collab.user.name === (collaborators ?? "Hussein Salim"))?.user.id)
+                EnvironmentName?.phones
+                  ?.filter(item => item.creatorId === EnvironmentName?.collaborators?.find(collab => collab.user.name === (collaborators ?? "Hussein Salim"))?.user.id)
                   ?.reduce((total, item) => total + Number(item.profit || 0), 0) // Summing profit
               }
               </span>
             </p>
             <p className="text-nowrap mt-2">
               phones: <span className='text-green-600 font-semibold'>{
-                envirnoment?.phones
-                  ?.filter(item => item.creatorId === envirnoment?.collaborators?.find(collab => collab.user.name === (collaborators ?? "Hussein Salim"))?.user.id).length
+                EnvironmentName?.phones
+                  ?.filter(item => item.creatorId === EnvironmentName?.collaborators?.find(collab => collab.user.name === (collaborators ?? "Hussein Salim"))?.user.id).length
               }
               </span>
             </p>
@@ -157,7 +131,7 @@ export default function Page() {
               <SelectValue className='placeholder:font-semibold' placeholder="اختر مستثمر  " />
             </SelectTrigger>
             <SelectContent position="popper">
-              {envirnoment?.collaborators.map(item => (
+              {EnvironmentName?.collaborators.map(item => (
                 <SelectItem key={item.user.id} value={item.user.name}>{item.user.name}</SelectItem>
               ))}
             </SelectContent>

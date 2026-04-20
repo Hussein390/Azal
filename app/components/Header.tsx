@@ -19,7 +19,7 @@ export default function Header() {
         <Search />
       </div>
       <div className="flex items-center gap-x-3">
-        <button className="p-2 border  hover:bg-blue-400 hover:text-white rounded-md delay-100" onClick={() => { setIsOpen("item") }}>Create Phone</button>
+        <button className="p-2 border  hover:bg-blue-400 hover:text-white rounded-md delay-100" onClick={() => { setIsOpen("item") }}>Create</button>
 
         < button className="p-2 border hidden md:flex hover:bg-blue-400 hover:text-white   rounded-md delay-100" onClick={() => { router.push('/environment') }}>Environment</button>
       </div>

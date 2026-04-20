@@ -88,6 +88,7 @@ export async function getEnvironmentById({id}: {id: string}) {
       where: {
         id,
       },
+      
       include: {
           phones: {
             orderBy: {
@@ -684,8 +685,11 @@ export async function getItems(environmentId: string) {
       orderBy: {
         createdAt: 'desc',
       },
+      include:{
+        creator: true,
+      }
     });
-
+    
     ;
     return phones;
   } catch (err: unknown) {
@@ -694,6 +698,88 @@ export async function getItems(environmentId: string) {
   }
 }
 
+export async function updateAllItemsCreator() {
+  try {    
+    const session = await auth();
+    const newCreatorId = '69da433140e0cd1e8fe716bb';
+    const environmentId = '69d66684987efc8d3d4f6ee3'
+  
+    if (!session?.user?.email) {
+        return "You need to sign in first";
+    }
+
+    const user = await db.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true },
+    });
+
+    if (!user || !user.id) {
+      return "User Not Found";
+    }
+
+    // Check if the user is the owner of the environment
+    const environment = await db.environment.findUnique({
+      where: { id: environmentId },
+      select: { ownerId: true },
+    });
+
+    if (!environment) {
+      return "Environment Not Found";
+    }
+
+    // Check if the user is a collaborator
+    const isCollaborator = await db.collaborator.findFirst({
+      where: {
+        environmentId,
+        userId: user.id,
+      },
+    });
+
+    // Only allow owner to update all items' creators
+
+
+    // Verify the new creator exists and is either owner or collaborator
+    const newCreator = await db.user.findUnique({
+      where: { id: newCreatorId },
+    });
+
+    if (!newCreator) {
+      return "New creator not found";
+    }
+
+    // Check if new creator is owner or collaborator
+    const isNewCreatorCollaborator = await db.collaborator.findFirst({
+      where: {
+        environmentId,
+        userId: newCreatorId,
+      },
+    });
+
+    if (environment.ownerId !== newCreatorId && !isNewCreatorCollaborator) {
+      return "Access Denied: New creator must be either the owner or a collaborator";
+    }
+
+    // Update all items in the environment
+    const updatedItems = await db.item.updateMany({
+      where: {
+        environmentId,
+      },
+      data: {
+        creatorId: newCreatorId,
+      },
+    });
+
+    return {
+      success: true,
+      message: `Successfully updated ${updatedItems.count} items`,
+      updatedCount: updatedItems.count
+    };
+    
+  } catch (err: unknown) {
+    if (err instanceof Error) return "Error----" + err.message;
+    else return "Unknown Error occurred";
+  }
+}
 
 type UpdateItemInput = {
   environmentId: string;

@@ -283,9 +283,8 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-x-2 mb-3">
-          {/* <button className={`${open == "Item" ? 'bg-blue-400 text-white ' : ''} p-2 rounded-md border hover:bg-blue-500 hover:text-white`} onClick={e => setIsOpen((e.target as HTMLButtonElement).innerText)}>FixPhone</button> */}
-          <button className={`${open == "Phone" ? 'bg-blue-400 text-white ' : ''} p-2 rounded-md border hover:bg-blue-500 hover:text-white`} onClick={e => setIsOpen((e.target as HTMLButtonElement).innerText)}>Phone</button>
-          <button className={`${open == "Items" ? 'bg-blue-400 text-white ' : ''} p-2 rounded-md border hover:bg-blue-500 hover:text-white`} onClick={e => setIsOpen((e.target as HTMLButtonElement).innerText)}>Items</button>
+          <button className={`${open == "Phone" ? 'bg-blue-400 text-white ' : ''} p-2 rounded-md border hover:bg-blue-500 hover:text-white`} onClick={e => setIsOpen("Phone")}>اقساط</button>
+          <button className={`${open == "Items" ? 'bg-blue-400 text-white ' : ''} p-2 rounded-md border hover:bg-blue-500 hover:text-white`} onClick={e => setIsOpen("Items")}>عنصر</button>
         </div>
         <form >
           {open === "Phone" ?
@@ -293,19 +292,20 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
 
             :
             <div id='main' className="flex justify-between gap-x-4 w-full items-start gap-4">
-              <div className="w-full flex flex-col gap-y-3">
-                <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="name">أسم العنصر</Label>
-                  <Input onChange={(e) => {
-                    setItem(prev => ({ ...prev, itemName: e.target.value }));
-                  }} value={item.itemName} id="name" placeholder={'Phone Name'} className="appearance-none" />
-                </div>
+              <div className="w-full flex flex-col md:grid md:grid-cols-2 md:gap-3 gap-y-3">
+
                 <div className="flex flex-col space-y-1.5">
                   <Label htmlFor="BoughtPrice">سعر الشراء</Label>
                   <Input onChange={(e) => {
                     setItem(prev => ({ ...prev, boughtPrice: e.target.value }));
 
                   }} value={item.boughtPrice} type="number" id="BoughtPrice" placeholder={'Bought Price'} className="appearance-none" />
+                </div>
+                  <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="name">أسم العنصر</Label>
+                  <Input onChange={(e) => {
+                    setItem(prev => ({ ...prev, itemName: e.target.value }));
+                  }} value={item.itemName} id="name" placeholder={'Item Name'} className="appearance-none" />
                 </div>
                 <div className="flex flex-col space-y-1.5">
                   <Label htmlFor="Price">سعر البيع</Label>

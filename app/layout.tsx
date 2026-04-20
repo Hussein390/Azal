@@ -3,16 +3,24 @@ import { Noto_Sans_Arabic } from "next/font/google";
 import "./globals.css";
 import Header from "./components/Header";
 import { DataProvider } from "./components/dataProvider";
+import DynamicTitle from "./components/DynamicTitle";
 
 export const arabic = Noto_Sans_Arabic({
   variable: "--font-geist-sans",
   subsets: ["arabic"],
 });
 
-
 export const metadata: Metadata = {
-  title: "Al Azal",
-  description: "This app was created by Hussein Saleem fro the Al Azal shop",
+  title: {
+    template: '%s | Hussein Saleem',
+    default: 'Hussein Saleem',
+  },
+  description: `This app was created by Hussein Saleem for the Al Azal shop`,
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon-shortcut.png",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({
@@ -22,11 +30,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${arabic.variable} antialiased`}
-      >
+      <body className={`${arabic.variable} antialiased`}>
         <DataProvider>
-          <div className="container mt-2 px-4 mx-auto ">
+          <DynamicTitle />
+          <div className="container mt-2 px-4 mx-auto">
             <Header />
             {children}
           </div>

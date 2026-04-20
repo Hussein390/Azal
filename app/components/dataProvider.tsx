@@ -1,7 +1,7 @@
 'use client'
-import { createFixPhoneProps } from "@/backend/envirnoment";
+import { createFixPhoneProps, getEnvironmentById } from "@/backend/envirnoment";
 
-import React, { createContext, ReactNode, useContext, useState, Dispatch, SetStateAction } from "react";
+import React, { createContext, ReactNode, useContext, useState, Dispatch, SetStateAction, useEffect } from "react";
 
 // Define the type for days
 export type PhoneProps = {
@@ -63,7 +63,27 @@ type IsOpenContextType = {
   showAlert: (message: string, isSuccess?: boolean) => void;  // ✅ Added showAlert
   setIsPriced: Dispatch<SetStateAction<isPaidProps[]>>;
   isPriced: isPaidProps[];
+  EnvironmentName: envirnomentProps
 };
+type collaboratorsProps = {
+  role: string,
+  user: {
+    id: string,
+    name: string,
+    image: string
+  }
+}
+type envirnomentProps = {
+  id: string,
+  name: string,
+  owner: { name: string },
+  password: string,
+  phones: { creatorId: string, profit: string, price: string }[],
+  items: any,
+    collaborators: collaboratorsProps[],
+
+}
+
 
 // Create the context with a proper default value
 const DataContext = createContext<IsOpenContextType>({
@@ -80,6 +100,15 @@ const DataContext = createContext<IsOpenContextType>({
   showAlert: () => { },
   setIsPriced: () => { },
   isPriced: [],
+  EnvironmentName: {
+    id: '',
+    name: '',
+    owner: { name: '' },
+    password: '',
+    phones: [],
+    items: {},
+    collaborators: []
+  }
 });
 
 // Create a provider component
@@ -92,7 +121,32 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const [alertMessage, setAlertMessage] = React.useState<string | null>(null);
   const [alertSuccessMessage, setAlertSuccessMessage] = React.useState<string | null>(null);
   const [isPriced, setIsPriced] = useState<isPaidProps[]>([]);
+const [EnvironmentName, setEnvironmentName] = useState<envirnomentProps>({
+  id: '',
+  name: '',
+  owner: { name: '' },
+  password: '',
+  phones: [],
+  items: {},
+  collaborators: []
+});
+  useEffect(() => {
 
+    async function fetchEnvironment() {
+      try {
+        const EnvId = localStorage.getItem('envId');
+    if (!EnvId) {
+      console.error('Environment ID is missing!');
+      return;
+    }
+        const data = await getEnvironmentById({ id: EnvId });
+        setEnvironmentName(data as envirnomentProps);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    fetchEnvironment();
+  }, []);
   function showAlert(message: string, isSuccess = false) {
     if (isSuccess) {
       setAlertSuccessMessage(message);
@@ -106,7 +160,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <DataContext.Provider value={{ isPriced, setIsPriced, search, setSearch, fixPhones, setFixPhones, phones, setPhones, setItems, items, isPhone, setIsPhone, showAlert }}>
+    <DataContext.Provider value={{ EnvironmentName, isPriced, setIsPriced, search, setSearch, fixPhones, setFixPhones, phones, setPhones, setItems, items, isPhone, setIsPhone, showAlert }}>
       {children}
       {(alertMessage || alertSuccessMessage) && (
         <div className={`fixed top-16 right-3 outline-2 ${alertSuccessMessage ? 'outline-green-600' : 'outline-red-600'}  outline rounded-md`}>
