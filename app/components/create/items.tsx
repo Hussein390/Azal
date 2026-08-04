@@ -19,26 +19,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { create_Fix_Phone, createFixPhoneProps, createItem, createPhone, get_Fix_Phones, getEnvironmentById, getItems, getPhone } from "../../../backend/envirnoment"
+import { createItem, createPhone, getEnvironmentById, getItems, getPhone } from "../../../backend/envirnoment"
 import { DataPhones, ItemProps, PhoneProps } from "../dataProvider"
 import Phones from "./phones"
 
 export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }) {
-  const { setPhones, setFixPhones, showAlert, setItems, isPhone } = DataPhones();
+  const { setPhones, showAlert, setItems, isPhone } = DataPhones();
   const [collaborators, setCollaborators] = React.useState([{ user: { id: '', name: '' } }]);
   const [open, setIsOpen] = React.useState("Phone");
-  const [FixPhone, setFixPhone] = React.useState<createFixPhoneProps>({
-    phoneName: '',
-    clientName: '',
-    clientNumber: '',
-    price: '',
-    firstPrice: '',
-    profit: '',
-    type: 'Android',
-    environmentId: '',
-    userId: '',
-    bug: ''
-  });
   const [phone, setPhone] = React.useState<PhoneProps>({
     phoneName: '',
     buyerName: '',
@@ -79,67 +67,10 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
       const data = await getPhone(EnvId);
       setPhones(data as PhoneProps[]);
 
-    } else if (isPhone === "FixPhone") {
-      const data = await get_Fix_Phones(EnvId);
-      setFixPhones(data as createFixPhoneProps[])
     }
   }
 
-  async function CREATE_FIX_PHONE() {
-    try {
-      if (FixPhone) {
-        if (!FixPhone.phoneName.trim()) {
-          showAlert("Please enter a name", false);
-          return;
-        }
-        if (!FixPhone.price) {
-          showAlert("Please add a price", false);
-          return;
-        }
-        if (!FixPhone.type) {
-          showAlert("Please select a system type", false);
-          return;
-        }
-      }
 
-      const EnvId = localStorage.getItem("envId");
-      if (!EnvId) {
-        showAlert("Environment ID not found", false);
-        return;
-      }
-
-      FixPhone.environmentId = EnvId;
-      const res = await create_Fix_Phone(FixPhone);
-      if (res instanceof Error) {
-        showAlert(res.message, false);
-        setOpen(null);
-        return;
-      }
-      if (res) {
-        showAlert("FixPhone created successfully ✅", true);
-        getPhones();
-      }
-      // Close modal and reset form
-      setOpen(null);
-      setFixPhone(prev => ({
-        ...prev,
-        phoneName: "",
-        clientName: "",
-        clientNumber: "",
-        profit: "",
-        price: "",
-        type: "Android",
-        bug: ''
-      }));
-
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        console.log("Error------", err);
-      } else {
-        console.log("Unknown error occurred");
-      }
-    }
-  }
   async function CREATE_PHONE() {
     try {
       if (phone) {
@@ -301,7 +232,7 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
 
                   }} value={item.boughtPrice} type="number" id="BoughtPrice" placeholder={'Bought Price'} className="appearance-none" />
                 </div>
-                  <div className="flex flex-col space-y-1.5">
+                <div className="flex flex-col space-y-1.5">
                   <Label htmlFor="name">أسم العنصر</Label>
                   <Input onChange={(e) => {
                     setItem(prev => ({ ...prev, itemName: e.target.value }));
@@ -390,7 +321,7 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
       </CardContent>
       <CardFooter className="flex justify-between">
         <Button variant="outline" onClick={() => setOpen(null)}>Cancel</Button>
-        <Button onClick={() => open === "Phone" ? CREATE_PHONE() : open === "FixPhone" ? CREATE_FIX_PHONE() : open === 'Items' ? CREATE_ITEMS() : ''}>Create</Button>
+        <Button onClick={() => open === "Phone" ? CREATE_PHONE() : open === 'Items' ? CREATE_ITEMS() : ''}>Create</Button>
       </CardFooter>
     </Card>
   );

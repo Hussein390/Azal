@@ -30,16 +30,9 @@ model Phone {
   updatedAt     DateTime    @updatedAt
 }
 
-model FixPhone {
-  id           String  @id @default(auto()) @map("_id") @db.ObjectId
-  phoneName    String
-  clientName   String
-  clientNumber String?
-  price        String
-  firstPrice   String
-  profit       String
-  type         String
-  bug          String
+model Type {
+  id   String @id @default(auto()) @map("_id") @db.ObjectId
+  type String
 
   environmentId String      @db.ObjectId
   creatorId     String      @db.ObjectId
@@ -86,7 +79,7 @@ model Environment {
   collaborators Collaborator[]
   phones        Phone[]
   items         Item[]
-  fixPhones     FixPhone[]
+  types         Type[]
   accessEmails  AccessEmail[]
 }
 
@@ -128,7 +121,7 @@ model User {
   collaborations Collaborator[]
   phones         Phone[]
   items          Item[]
-  fixPhones      FixPhone[]
+  types          Type[]
 }
 
 model Account {

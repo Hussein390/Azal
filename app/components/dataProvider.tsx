@@ -1,5 +1,5 @@
 'use client'
-import { createFixPhoneProps, getEnvironmentById } from "@/backend/envirnoment";
+import { getEnvironmentById } from "@/backend/envirnoment";
 
 import React, { createContext, ReactNode, useContext, useState, Dispatch, SetStateAction, useEffect } from "react";
 
@@ -54,8 +54,6 @@ type IsOpenContextType = {
   setSearch: Dispatch<SetStateAction<{ name: string, type: string }>>,
   phones: PhoneProps[];
   setPhones: Dispatch<SetStateAction<PhoneProps[]>>;
-  fixPhones: createFixPhoneProps[];
-  setFixPhones: Dispatch<SetStateAction<createFixPhoneProps[]>>;
   items: ItemProps[];
   setItems: Dispatch<SetStateAction<ItemProps[]>>;
   isPhone: string;
@@ -80,7 +78,7 @@ type envirnomentProps = {
   password: string,
   phones: { creatorId: string, profit: string, price: string }[],
   items: any,
-    collaborators: collaboratorsProps[],
+  collaborators: collaboratorsProps[],
 
 }
 
@@ -91,8 +89,6 @@ const DataContext = createContext<IsOpenContextType>({
   setSearch: () => { },
   phones: [],
   setPhones: () => { },
-  fixPhones: [],
-  setFixPhones: () => { },
   items: [],
   setItems: () => { },
   isPhone: '',
@@ -114,31 +110,30 @@ const DataContext = createContext<IsOpenContextType>({
 // Create a provider component
 export const DataProvider = ({ children }: { children: ReactNode }) => {
   const [phones, setPhones] = useState<PhoneProps[]>([]);
-  const [fixPhones, setFixPhones] = useState<createFixPhoneProps[]>([]);
   const [items, setItems] = useState<ItemProps[]>([]);
   const [isPhone, setIsPhone] = useState<string>("Phone");
   const [search, setSearch] = React.useState<{ name: string, type: string }>({ name: '', type: '' });
   const [alertMessage, setAlertMessage] = React.useState<string | null>(null);
   const [alertSuccessMessage, setAlertSuccessMessage] = React.useState<string | null>(null);
   const [isPriced, setIsPriced] = useState<isPaidProps[]>([]);
-const [EnvironmentName, setEnvironmentName] = useState<envirnomentProps>({
-  id: '',
-  name: '',
-  owner: { name: '' },
-  password: '',
-  phones: [],
-  items: {},
-  collaborators: []
-});
+  const [EnvironmentName, setEnvironmentName] = useState<envirnomentProps>({
+    id: '',
+    name: '',
+    owner: { name: '' },
+    password: '',
+    phones: [],
+    items: {},
+    collaborators: []
+  });
   useEffect(() => {
 
     async function fetchEnvironment() {
       try {
         const EnvId = localStorage.getItem('envId');
-    if (!EnvId) {
-      console.error('Environment ID is missing!');
-      return;
-    }
+        if (!EnvId) {
+          console.error('Environment ID is missing!');
+          return;
+        }
         const data = await getEnvironmentById({ id: EnvId });
         setEnvironmentName(data as envirnomentProps);
       } catch (err) {
@@ -160,7 +155,7 @@ const [EnvironmentName, setEnvironmentName] = useState<envirnomentProps>({
   }
 
   return (
-    <DataContext.Provider value={{ EnvironmentName, isPriced, setIsPriced, search, setSearch, fixPhones, setFixPhones, phones, setPhones, setItems, items, isPhone, setIsPhone, showAlert }}>
+    <DataContext.Provider value={{ EnvironmentName, isPriced, setIsPriced, search, setSearch, phones, setPhones, setItems, items, isPhone, setIsPhone, showAlert }}>
       {children}
       {(alertMessage || alertSuccessMessage) && (
         <div className={`fixed top-16 right-3 outline-2 ${alertSuccessMessage ? 'outline-green-600' : 'outline-red-600'}  outline rounded-md`}>

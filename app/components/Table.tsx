@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { createFixPhoneProps, deleteItem, get_Fix_Phones, getEnvironmentById, getItems, getPhone, updateItem} from '../../backend/envirnoment'
+import { deleteItem, getEnvironmentById, getItems, getPhone, updateItem } from '../../backend/envirnoment'
 import { DataPhones, ItemProps, PhoneProps } from './dataProvider'
 import { useRouter } from 'next/navigation'
 import jsPDF from 'jspdf';
@@ -22,14 +22,33 @@ type UpdateState = {
   text?: string;
   boughtPrice?: string;
   installmentPrice?: string;
+  type?: string;
 };
 export default function Tables() {
-  const { showAlert, phones, setPhones, search, setFixPhones, setIsPhone, isPhone, items, setItems, EnvironmentName } = DataPhones();
+  const { showAlert, phones, setPhones, search, setIsPhone, isPhone, items, setItems, EnvironmentName } = DataPhones();
   const router = useRouter()
+  const phoneTableRef = useRef<HTMLDivElement>(null);
+  const [highlightedPhoneId, setHighlightedPhoneId] = useState<string | null>(null);
   const [open, setOpen] = useState<{ [key: number]: boolean }>({});
   const [allMoney, setAllMoney] = useState<number>(0);
-  const [allItemsMoney, setAllItemsMoney] = useState<{sellPrice: number, installmentsPrice: number, boughtPrice: number}>({sellPrice: 0, boughtPrice: 0,installmentsPrice:0});
+  const [allItemsMoney, setAllItemsMoney] = useState<{ sellPrice: number, installmentsPrice: number, boughtPrice: number }>({ sellPrice: 0, boughtPrice: 0, installmentsPrice: 0 });
+  const FilteredItems = useMemo(() => {
+    const name = search.name.toLowerCase().trim();
+    const type = search.type.toLowerCase().trim();
 
+    return items.filter((task) => {
+      const matchesName =
+        name === "" ||
+        task.itemName.toLowerCase().includes(name);
+
+      const matchesType =
+        type === "" ||
+        type === "all" ||
+        task.type?.toLowerCase() === type;
+
+      return matchesName && matchesType;
+    });
+  }, [items, search.name, search.type]);
   const [isUpdate, setIsUpdate] = useState<{ [key: number]: boolean }>({});
   const [update, setUpdate] = useState<UpdateState>({});
   const USER = typeof window !== "undefined"
@@ -37,25 +56,25 @@ export default function Tables() {
     : null;
 
 
-    //Generate PDF
-    const PDFRef = useRef<HTMLDivElement | null>(null)
-    
-async function handleGeneratePDF() {
-  try {
-    const element = PDFRef.current!;
-    const originalHeight = element.style.height;
-    const originalOverflow = element.style.overflow;
-    
-    element.style.height = 'auto';
-    element.style.overflow = 'visible';
-    
-    // Format date as 2026/4/20
-    const now = new Date();
-    const currentDate = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
-    
-    // Create header
-    const headerDiv = document.createElement('div');
-    headerDiv.style.cssText = `
+  //Generate PDF
+  const PDFRef = useRef<HTMLDivElement | null>(null)
+
+  async function handleGeneratePDF() {
+    try {
+      const element = PDFRef.current!;
+      const originalHeight = element.style.height;
+      const originalOverflow = element.style.overflow;
+
+      element.style.height = 'auto';
+      element.style.overflow = 'visible';
+
+      // Format date as 2026/4/20
+      const now = new Date();
+      const currentDate = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
+
+      // Create header
+      const headerDiv = document.createElement('div');
+      headerDiv.style.cssText = `
       padding:8px;
       margin-bottom: 6px;
       display: flex;
@@ -65,93 +84,93 @@ async function handleGeneratePDF() {
       font-weight: bold;
       text-align: center;
     `;
-    
-    headerDiv.innerHTML = `
+
+      headerDiv.innerHTML = `
       <span>${EnvironmentName?.name || 'Hussein'}</span>
       <span> التاريخ: ${currentDate}</span>
     `;
-    
-    element.insertBefore(headerDiv, element.firstChild);
-    
-    // Apply compact styles
-    const tableCells = element.querySelectorAll('th, td');
-    const originalPadding: string[] = [];
-    tableCells.forEach((cell, index) => {
-      const el = cell as HTMLElement;
-      originalPadding[index] = el.style.padding || '';
-      el.style.padding = '5px 5px';
-      el.style.fontSize = '16px';
-    });
-    
-    const rows = element.querySelectorAll('tr');
-    rows.forEach(row => {
-      (row as HTMLElement).style.lineHeight = '1.4';
-    });
-    
-    const container = element.parentElement;
-    const originalContainerPadding = container?.style.padding;
-    if (container) container.style.padding = '0';
-    
-    await new Promise(resolve => setTimeout(resolve, 50));
-    
-    const canvas = await html2canvas(element, {
-      scale: 1.9,
-      useCORS: true,
-      allowTaint: true,
-      windowHeight: element.scrollHeight,
-      height: element.scrollHeight,
-    });
-    
-    // Remove temporary header
-    if (headerDiv && headerDiv.parentNode) {
-      headerDiv.remove();
+
+      element.insertBefore(headerDiv, element.firstChild);
+
+      // Apply compact styles
+      const tableCells = element.querySelectorAll('th, td');
+      const originalPadding: string[] = [];
+      tableCells.forEach((cell, index) => {
+        const el = cell as HTMLElement;
+        originalPadding[index] = el.style.padding || '';
+        el.style.padding = '5px 5px';
+        el.style.fontSize = '16px';
+      });
+
+      const rows = element.querySelectorAll('tr');
+      rows.forEach(row => {
+        (row as HTMLElement).style.lineHeight = '1.4';
+      });
+
+      const container = element.parentElement;
+      const originalContainerPadding = container?.style.padding;
+      if (container) container.style.padding = '0';
+
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const canvas = await html2canvas(element, {
+        scale: 1.9,
+        useCORS: true,
+        allowTaint: true,
+        windowHeight: element.scrollHeight,
+        height: element.scrollHeight,
+      });
+
+      // Remove temporary header
+      if (headerDiv && headerDiv.parentNode) {
+        headerDiv.remove();
+      }
+
+      // Restore original styles
+      element.style.height = originalHeight;
+      element.style.overflow = originalOverflow;
+      tableCells.forEach((cell, index) => {
+        const el = cell as HTMLElement;
+        el.style.padding = originalPadding[index];
+        el.style.fontSize = '';
+      });
+      rows.forEach(row => {
+        (row as HTMLElement).style.lineHeight = '';
+      });
+      if (container) container.style.padding = originalContainerPadding || '';
+
+      const imgData = canvas.toDataURL('image/png');
+
+      // CHANGE THIS LINE - from 'landscape' to 'portrait'
+      const pdf = new jsPDF({
+        orientation: 'portrait',  // Changed from 'landscape'
+        unit: 'px',
+      });
+
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+      let pageCount = 0;
+
+      while (heightLeft > 0) {
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdfHeight;
+        position -= pdfHeight;
+        if (heightLeft > 0) pdf.addPage();
+        pageCount++;
+      }
+
+      console.log(`Generated ${pageCount} pages`);
+      pdf.save("Azal.pdf");
+
+    } catch (err: unknown) {
+      if (err instanceof Error) console.log(err.message);
     }
-    
-    // Restore original styles
-    element.style.height = originalHeight;
-    element.style.overflow = originalOverflow;
-    tableCells.forEach((cell, index) => {
-      const el = cell as HTMLElement;
-      el.style.padding = originalPadding[index];
-      el.style.fontSize = '';
-    });
-    rows.forEach(row => {
-      (row as HTMLElement).style.lineHeight = '';
-    });
-    if (container) container.style.padding = originalContainerPadding || '';
-    
-    const imgData = canvas.toDataURL('image/png');
-    
-    // CHANGE THIS LINE - from 'landscape' to 'portrait'
-    const pdf = new jsPDF({
-      orientation: 'portrait',  // Changed from 'landscape'
-      unit: 'px',
-    });
-    
-    const imgProps = pdf.getImageProperties(imgData);
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
-    
-    let heightLeft = imgHeight;
-    let position = 0;
-    let pageCount = 0;
-    
-    while (heightLeft > 0) {
-      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-      heightLeft -= pdfHeight;
-      position -= pdfHeight;
-      if (heightLeft > 0) pdf.addPage();
-      pageCount++;
-    }
-    
-    console.log(`Generated ${pageCount} pages`);
-    pdf.save("Azal.pdf");
-    
-  } catch (err: unknown) {
-    if (err instanceof Error) console.log(err.message);
   }
-}
   // Get Collaborators
   const [ownerID, setOwnerID] = useState<string>('')
   const [collaborators, setCollaborators] = useState<{ user: { id: string, name: string | null } }[] | null>(null)
@@ -191,8 +210,8 @@ async function handleGeneratePDF() {
       // if no filter selected, show all
       if (!ownerID) return true;
       const name = search.name.toLowerCase() === "" ? true
-                        : task.buyerName!.toLowerCase().includes(search.name.toLowerCase());
-      return  task.creator?.id === ownerID || ownerID === 'all-users' && name;
+        : task.buyerName!.toLowerCase().includes(search.name.toLowerCase());
+      return task.creator?.id === ownerID || ownerID === 'all-users' && name;
     })
 
 
@@ -212,21 +231,21 @@ async function handleGeneratePDF() {
       0);
   }, [filteredTasks]);
 
- const totalItemsMoney = useMemo(() => {
-  const boughtPrice = items.reduce((sum, task) =>
-    sum + (Number(task.boughtPrice) || 0) * (Number(task.length) || 0),
-    0);
-  
-  const sellPrice = items.reduce((sum, task) =>
-    sum + (Number(task.sellPrice) || 0) * (Number(task.length) || 0),
-    0);
-  
-  const installmentsPrice = items.reduce((sum, task) =>
-    sum + (Number(task.installmentPrice) || 0) * (Number(task.length) || 0),
-    0);
+  const totalItemsMoney = useMemo(() => {
+    const boughtPrice = FilteredItems.reduce((sum, task) =>
+      sum + (Number(task.boughtPrice) || 0) * (Number(task.length) || 0),
+      0);
 
-  return { boughtPrice, sellPrice, installmentsPrice };
-}, [items]);
+    const sellPrice = FilteredItems.reduce((sum, task) =>
+      sum + (Number(task.sellPrice) || 0) * (Number(task.length) || 0),
+      0);
+
+    const installmentsPrice = FilteredItems.reduce((sum, task) =>
+      sum + (Number(task.installmentPrice) || 0) * (Number(task.length) || 0),
+      0);
+
+    return { boughtPrice, sellPrice, installmentsPrice };
+  }, [FilteredItems]);
 
   useEffect(() => {
     setAllMoney(totalMoney);
@@ -253,9 +272,6 @@ async function handleGeneratePDF() {
       const data = await getPhone(EnvId);
       setPhones(data as PhoneProps[]);
 
-    } else if (isPhone === "FixPhone") {
-      const data = await get_Fix_Phones(EnvId);
-      setFixPhones(data as createFixPhoneProps[])
     }
   }
 
@@ -282,6 +298,7 @@ async function handleGeneratePDF() {
     if (update.boughtPrice !== undefined) object.boughtPrice = update.boughtPrice;
     if (update.installmentPrice !== undefined) object.installmentPrice = update.installmentPrice;
     if (update.text !== undefined) object.text = update.text;
+    if (update.type !== undefined) object.type = update.type;
 
     const result = await updateItem(object);
 
@@ -297,39 +314,39 @@ async function handleGeneratePDF() {
           : i
       )
     );
-    
-    setUpdate({ });
+
+    setUpdate({});
   }
   // But an Item
   async function BuyItem(item: { id: string }, index: number) {
-  const EnvId = localStorage.getItem('envId');
+    const EnvId = localStorage.getItem('envId');
 
-  if (!EnvId) {
-    console.error('Environment ID is missing!');
-    return;
-  }
+    if (!EnvId) {
+      console.error('Environment ID is missing!');
+      return;
+    }
 
-  const currentItem = items.find(i => i.id === item.id);
+    const currentItem = items.find(i => i.id === item.id);
 
-  if (currentItem && Number(currentItem.length) >= 1) {
-    const decreasedLength = String(Number(currentItem.length) - 1);
-    
-    const object = {
-      environmentId: EnvId,
-      id: item.id,
-      length: decreasedLength, // Use decreased length, not update.length
-      fixedLength: update.fixedLength,
-      sellPrice: update.sellPrice,
-      boughtPrice: update.boughtPrice,
-      text: update.text,
-      installmentPrice: update.installmentPrice
-    };
+    if (currentItem && Number(currentItem.length) >= 1) {
+      const decreasedLength = String(Number(currentItem.length) - 1);
 
-     await updateItem(object);
-    
-    
+      const object = {
+        environmentId: EnvId,
+        id: item.id,
+        length: decreasedLength, // Use decreased length, not update.length
+        fixedLength: update.fixedLength,
+        sellPrice: update.sellPrice,
+        boughtPrice: update.boughtPrice,
+        text: update.text,
+        installmentPrice: update.installmentPrice
+      };
+
+      await updateItem(object);
+
+
       showAlert(`Item purchased! Remaining: ${decreasedLength}`, true);
-      
+
       setIsUpdate(prev => ({ ...prev, [index]: false }));
       setOpen(prev => ({ ...prev, [index]: false }));
 
@@ -347,8 +364,8 @@ async function handleGeneratePDF() {
       showAlert('Failed to update item on server', false);
       // Optionally refresh data from server to sync
     }
-  
-}
+
+  }
 
   // Delete Item
   async function DeletItem(item: { id: string }, index: number) {
@@ -369,6 +386,40 @@ async function handleGeneratePDF() {
   useEffect(() => {
     if (USER) setOwnerID(USER);
   }, [USER]);
+
+  useEffect(() => {
+    if (!phones || phones.length === 0) return;
+
+    const savedPosition = localStorage.getItem("phonesScrollPosition");
+
+    if (!savedPosition) return;
+
+    const timer = setTimeout(() => {
+      if (phoneTableRef.current) {
+        phoneTableRef.current.scrollTop = Number(savedPosition);
+      }
+
+      localStorage.removeItem("phonesScrollPosition");
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [phones]);
+  useEffect(() => {
+    if (!phones || phones.length === 0) return;
+
+    const savedId = localStorage.getItem("selectedPhoneId");
+
+    if (!savedId) return;
+
+    setHighlightedPhoneId(savedId);
+
+    const timer = setTimeout(() => {
+      setHighlightedPhoneId(null);
+      localStorage.removeItem("selectedPhoneId");
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [phones]);
   return (
     <div className='lg:w-[1200px] mb-4 lg:mb-0 lg:mr-7 grid grid-cols-1'>
       <div className="flex items-center gap-x-2 mb-3">
@@ -440,9 +491,13 @@ async function handleGeneratePDF() {
             <div>سعر التقسيط الكلي: <span className='text-yellow-600'>{allItemsMoney.installmentsPrice}</span>
             </div>
           </div>
-        } 
+        }
       </div>
-      <div className=' mx-auto max-h-[650px] overflow-y-auto relative w-full' style={{ scrollbarWidth: 'none' }}>
+      <div
+        ref={phoneTableRef}
+        className="mx-auto max-h-[650px] overflow-y-auto relative w-full"
+        style={{ scrollbarWidth: 'none' }}
+      >
         {isPhone === "Phone" ? <Table>
           <TableHeader>
             <TableRow className='border-b border-b-black'>
@@ -460,7 +515,26 @@ async function handleGeneratePDF() {
             {(Array.isArray(phones) && phones.length > 0) ?
               Array.isArray(phones) && filteredTasks.map((phone, index) => (
 
-                <TableRow className="cursor-pointer" onClick={() => router.push(phone.id!)} key={index}>
+                <TableRow
+                  className={`cursor-pointer ${highlightedPhoneId === phone.id
+                    ? "animate-green-pulse"
+                    : ""
+                    }`}
+                  onClick={() => {
+                    const scrollPosition = phoneTableRef.current?.scrollTop ?? 0;
+
+                    localStorage.setItem(
+                      "phonesScrollPosition",
+                      scrollPosition.toString()
+                    );
+                    localStorage.setItem(
+                      "selectedPhoneId",
+                      phone.id!
+                    );
+                    router.push(phone.id!);
+                  }}
+                  key={phone.id}
+                >
                   <TableCell className="font-medium w-3">{index + 1}</TableCell>
                   <TableCell className="font-medium">{phone.phoneName}</TableCell>
                   <TableCell>{phone.price}</TableCell>
@@ -481,101 +555,107 @@ async function handleGeneratePDF() {
               </TableRow>}
           </TableBody>
         </Table> : isPhone === "Item" &&
-        <div ref={ PDFRef} className='w-full font-sans font-semibold '>
+        <div ref={PDFRef} className='w-full font-sans font-semibold '>
 
           < Table >
             <TableHeader>
-  <TableRow className='border-b border-b-black'>
-    <TableHead className="text-nowrap">عدد العناصر</TableHead>
-    <TableHead className="text-center w-48">اسم العنصر</TableHead>
-    <TableHead>سعر الشراء</TableHead>
-    <TableHead>سعر البيع</TableHead>
-    <TableHead>سعر التقسيط</TableHead>
-    <TableHead>العدد الثابت</TableHead>
-    <TableHead>العدد</TableHead>
-    <TableHead>ملاحضه</TableHead>
-    <TableHead >التاريخ</TableHead>
-    <TableHead className="text-right">المالك</TableHead>
-  </TableRow>
-</TableHeader>
+              <TableRow className='border-b border-b-black'>
+                <TableHead className="text-nowrap">عدد العناصر</TableHead>
+                <TableHead className="text-center w-48">اسم العنصر</TableHead>
+                <TableHead>سعر الشراء</TableHead>
+                <TableHead>سعر البيع</TableHead>
+                <TableHead>سعر التقسيط</TableHead>
+                <TableHead>العدد الثابت</TableHead>
+                <TableHead>العدد</TableHead>
+                <TableHead>ملاحضه</TableHead>
+                <TableHead >التاريخ</TableHead>
+                <TableHead className="text-right">المالك</TableHead>
+              </TableRow>
+            </TableHeader>
             <TableBody >
               {Array.isArray(items) && items.length >= 1 ? (
-                items
-                  .filter((task) => {
-                    const name =
-                      search.name.toLowerCase() === ""
-                        ? true
-                        : task.itemName.toLowerCase().includes(search.name.toLowerCase());
-                    return name ;
-                  }).map((item, index) => (
+                FilteredItems.map((item, index) => (
 
-                    <TableRow className="cursor-pointer select-none text-center relative" onDoubleClick={() => setOpen(prev => ({ ...prev, [index]: !prev[index] }))} key={index}>
-                      <TableCell className="font-medium w-3">{index + 1}</TableCell>
-                      <TableCell className="font-medium text-left">{item.itemName}</TableCell>
-                      <TableCell className='text-blue-600'>{item.boughtPrice}</TableCell>
-                      <TableCell className="font-sans font-semibold relative text-green-600">
-                        {!isUpdate[index]? item.sellPrice 
+                  <TableRow className="cursor-pointer select-none text-center relative" onDoubleClick={() => setOpen(prev => ({ ...prev, [index]: !prev[index] }))} key={index}>
+                    <TableCell className="font-medium w-3">{index + 1}</TableCell>
+                    <TableCell className="font-medium text-left">{item.itemName}</TableCell>
+                    <TableCell className='text-blue-600'>{item.boughtPrice}</TableCell>
+                    <TableCell className="font-sans font-semibold relative text-green-600">
+                      {!isUpdate[index] ? item.sellPrice
                         : <input value={update.sellPrice} onChange={(e) => setUpdate(prev => ({ ...prev, sellPrice: e.target.value }))} type="text" className='rounded-full absolute top-3 left-5 m-0 p-2 h-7 w-14 border-slate-400 border' />}
-                      </TableCell>
-                      <TableCell className="font-sans font-semibold relative text-red-600">
-                        
-                        {!isUpdate[index] ? item.installmentPrice
+                    </TableCell>
+                    <TableCell className="font-sans font-semibold relative text-red-600">
+
+                      {!isUpdate[index] ? item.installmentPrice
                         : <input value={update.installmentPrice} onChange={(e) => setUpdate(prev => ({ ...prev, installmentPrice: e.target.value }))} type="text" className='rounded-full absolute top-3 right-10 m-0 p-2 h-7 w-14 border-slate-400 border' />}
-                      </TableCell>
-                      <TableCell className="font-sans font-semibold relative text-yellow-600">
-                        {item.fixedLength}
-                        {/* {!isUpdate[index]
+                    </TableCell>
+                    <TableCell className="font-sans font-semibold relative text-yellow-600">
+                      {item.fixedLength}
+                      {/* {!isUpdate[index]
                         : <input value={update.fixedLength} onChange={(e) => setUpdate(prev => ({ ...prev, fixedLength: e.target.value }))} type="text" className='rounded-full absolute top-3 left-2 m-0 p-2 h-7 w-14 border-slate-400 border' />} */}
-                      </TableCell>
-                      <TableCell className="font-sans font-semibold relative">
-                        
-                        {!isUpdate[index] ? item.length
+                    </TableCell>
+                    <TableCell className="font-sans font-semibold relative">
+
+                      {!isUpdate[index] ? item.length
                         : <input value={update.length} onChange={(e) => setUpdate(prev => ({ ...prev, length: e.target.value }))} type="text" className='rounded-full absolute top-3 left-5 m-0 p-2 h-7 w-14 border-slate-400 border' />}
+                    </TableCell>
+                    <TableCell className="font-sans font-semibold relative text-blue-600">
+
+                      {!isUpdate[index] ? item.text
+                        : <input value={update.text} onChange={(e) => setUpdate(prev => ({ ...prev, text: e.target.value }))} type="text" className='rounded-full absolute top-3 left-2 m-0 p-2 h-7 w-14 border-slate-400 border' />}
+                    </TableCell>
+
+                    {isUpdate[index] ?
+                      < TableCell className="font-sans font-semibold relative text-purple-600">
+                        {/* {item.type} */}
+                        <input value={update.type} placeholder='Type' onChange={(e) => setUpdate(prev => ({ ...prev, type: e.target.value }))} type="text" className='rounded-full absolute top-3 left-2 m-0 p-2 h-7 w-14 border-slate-400 border' />
                       </TableCell>
-                      <TableCell className="font-sans font-semibold relative text-blue-600">
-                        
-                        {!isUpdate[index] ?item.text
-                        : <input  value={update.text} onChange={(e) => setUpdate(prev => ({ ...prev, text: e.target.value }))} type="text" className='rounded-full absolute top-3 left-2 m-0 p-2 h-7 w-14 border-slate-400 border' />}
-                      </TableCell>
+                      :
                       <TableCell >
                         {item.createdAt ? item.createdAt.toLocaleDateString('en-CA').replaceAll('-', '/') : 'N/A'}
-                      </TableCell>
-                      <TableCell className="text-right select-none ">{item.creator?.name ?? 'Hussein'}</TableCell>
-                      {open[index] && <TableCell className="flex gap-x-2 p-2 items-center m-0 absolute top-0 right-0 bg-slate-300 rounded-3xl">
-                        <button onClick={() => {
-                          setOpen(prev => ({ ...prev, [index]: false }))
-                          setIsUpdate(prev => ({ ...prev, [index]: !prev[index] }))
-                          setUpdate({
-                              length: item.length,
-                              sellPrice: item.sellPrice,
-                              text: item.text,
-                              boughtPrice: item.boughtPrice,
-                              installmentPrice: item.installmentPrice
-                            })
-                        }} className=" bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600">
-                          Edit
-                        </button>
-                        <button onClick={() => DeletItem(item, index)} className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600">
-                          Delete
-                        </button>
-                        <button onClick={() => BuyItem(item, index)} className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600">
-                          Buy
-                        </button>
                       </TableCell>}
-                      {isUpdate[index] && <TableCell className="flex gap-x-3 items-center m-0 p-2 absolute top-0 right-0 bg-slate-300 rounded-3xl">
-                        <button onClick={() => {
-                          UpdateItem(item, index)
-                          setIsUpdate(prev => ({ ...prev, [index]: false }))
-                        }} className=" bg-green-500 text-white p-2 rounded-full hover:bg-green-600">
-                          Save
-                        </button>
-                        <button onClick={() => setIsUpdate(prev => ({ ...prev, [index]: false }))} className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600">
-                          Cancel
-                        </button>
-                      </TableCell>}
-                    </TableRow>
-                  )))
-                : <p className='text-center mt-3'>No items found</p>}
+                    <TableCell className="text-right select-none ">{item.creator?.name ?? 'Hussein'}</TableCell>
+                    {open[index] && <TableCell className="flex gap-x-2 p-2 items-center m-0 absolute top-0 right-0 bg-slate-300 rounded-3xl">
+                      <button onClick={() => {
+                        setOpen(prev => ({ ...prev, [index]: false }))
+                        setIsUpdate(prev => ({ ...prev, [index]: !prev[index] }))
+                        setUpdate({
+                          length: item.length,
+                          sellPrice: item.sellPrice,
+                          text: item.text,
+                          boughtPrice: item.boughtPrice,
+                          installmentPrice: item.installmentPrice,
+                          type: item.type
+                        })
+                      }} className=" bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600">
+                        Edit
+                      </button>
+                      <button onClick={() => DeletItem(item, index)} className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600">
+                        Delete
+                      </button>
+                      <button onClick={() => BuyItem(item, index)} className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600">
+                        Buy
+                      </button>
+                    </TableCell>}
+                    {isUpdate[index] && <TableCell className="flex gap-x-3 items-center m-0 p-2 absolute top-0 right-0 bg-slate-300 rounded-3xl">
+                      <button onClick={() => {
+                        UpdateItem(item, index)
+                        setIsUpdate(prev => ({ ...prev, [index]: false }))
+                      }} className=" bg-green-500 text-white p-2 rounded-full hover:bg-green-600">
+                        Save
+                      </button>
+                      <button onClick={() => setIsUpdate(prev => ({ ...prev, [index]: false }))} className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600">
+                        Cancel
+                      </button>
+                    </TableCell>}
+                  </TableRow>
+                )))
+                :
+                <TableRow>
+                  <TableCell colSpan={7} className='text-center mt-3'>
+                    No items found
+                  </TableCell>
+                </TableRow>}
             </TableBody>
           </Table>
         </div>}

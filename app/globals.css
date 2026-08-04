@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes greenPulse {
+  0% {
+    box-shadow: 0 0 0px rgba(34, 197, 94, 0);
+  }
+
+  50% {
+    box-shadow: 0 0 10px 4px rgba(4, 62, 25, 0.8);
+  }
+
+  100% {
+    box-shadow: 0 0 0px rgba(34, 197, 94, 0);
+  }
+}
+
+.animate-green-pulse {
+  animation: greenPulse 1s ease-in-out infinite;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

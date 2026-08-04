@@ -790,6 +790,7 @@ type UpdateItemInput = {
   length?: string;
   fixedLength?: string;
   text?: string;
+  type?: string;
 };
 export async function updateItem({
   environmentId,
@@ -799,6 +800,7 @@ export async function updateItem({
   installmentPrice,
   length,
   fixedLength,
+  type,
 }: UpdateItemInput) {
   try {    
     const session = await auth();
@@ -811,11 +813,12 @@ export async function updateItem({
       if (!user || !user.id) {
         return ("User Not Found");
     }
-    let data: { sellPrice?: string; boughtPrice?: string; installmentPrice?: string; length?: string, fixedLength?: string, text?: string } = {};
+    let data: { sellPrice?: string; type?: string; boughtPrice?: string; installmentPrice?: string; length?: string, fixedLength?: string, text?: string } = {};
     if (sellPrice !== undefined && sellPrice !== "") data.sellPrice = String(sellPrice);
     if (boughtPrice !== undefined && boughtPrice !== "") data.boughtPrice = String(boughtPrice);
     if (installmentPrice !== undefined && installmentPrice !== "") data.installmentPrice = String(installmentPrice);
     if (length !== undefined && length !== "") data.length = String(length);
+    if (type !== undefined && type !== "") data.type = String(type);
     if (fixedLength !== undefined && fixedLength !== "") data.fixedLength = String(fixedLength);
     
     const phones = await db.item.update({
@@ -1119,26 +1122,16 @@ export async function updateIsPaid({id, envId}:{id: string, envId: string}) {
 }
 
 
-//// Fix Phone
+//// Type
 
-export type createFixPhoneProps = {
+export type createTypeProps = {
   id?: string
-  phoneName :   string
-  clientName:    string
-  clientNumber?: string
-  price: string
-  firstPrice: string
-  profit: string
-  type:         string
+  type: string
   environmentId: string
-  bug :string
-  userId?: string
-  createdAt?: Date;
-    creator?: {
-    name: string;
-  };
 }
-export async function create_Fix_Phone({phoneName, bug, clientName, clientNumber, price, firstPrice, type, environmentId, profit, userId}: createFixPhoneProps) {
+
+
+export async function createType({ type, environmentId}: createTypeProps) {
   try {    
     const session = await auth();
   
@@ -1171,31 +1164,34 @@ export async function create_Fix_Phone({phoneName, bug, clientName, clientNumber
     if (environment.ownerId !== user.id && !isCollaborator || isCollaborator?.role === 'VIEWER') {
       return new Error("You are not allowed to create");
     }
-    const phone = await db.fixPhone.create({
-      data: {
-        phoneName,
-        clientName,
-        clientNumber,
-        price,
-        firstPrice,
-        profit,
-        type,
-        bug,
-        environmentId,
-        creatorId: userId || environment.ownerId,
-      },
-    })
+    const existingType = await db.type.findFirst({
+  where: {
+    type,
+    environmentId,
+  },
+});
 
-    console.log("Fix Phone created successfully");
+if (existingType) {
+  return new Error("This type already exists");
+}
+
+const newType = await db.type.create({
+  data: {
+    type,
+    environmentId,
+    creatorId: environment.ownerId,
+  },
+});
     
-    return phone
+    
+    return newType
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
     else return "Unknown Error occurred"
   }
 }
 
-export async function get_Fix_Phones(environmentId: string) {
+export async function get_Types(environmentId: string) {
   try {    
     const session = await auth();
   
@@ -1228,23 +1224,20 @@ export async function get_Fix_Phones(environmentId: string) {
     if (environment.ownerId !== user.id && !isCollaborator) {
       return new Error("Access Denied: You are not authorized to view this data.");
     }
-    const phones = await db.fixPhone.findMany({
-      include: {
-        creator: true
-      },
+    const Types = await db.type.findMany({
       orderBy: {
         createdAt: 'desc'
       }
     });
 
     
-    return phones
+    return Types
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
     else return "Unknown Error occurred"
   }
 }
-export async function delete_Fix_Phone(id: string, envId: string) {
+export async function delete_Type(name: string, envId: string) {
   try {    
     const session = await auth();
   
@@ -1278,42 +1271,26 @@ export async function delete_Fix_Phone(id: string, envId: string) {
       return new Error("You are not allowed to delete");
     }
     
-    const phones = await db.$transaction([
-  db.fixPhone.delete({ where: { id } }) // Then delete the phone
-]);
-
-
-    
-    return phones
-  } catch (err: unknown) {
-    if (err instanceof Error) return ("Error----" + err.message)
-    else return "Unknown Error occurred"
-  }
+    const item = await db.type.findFirst({
+  where: {
+    type: name,
+  },
+});
+ if(!item) {
+  return new Error("This type is not exists");
 }
-export async function get_A_Fix_Phone(id: string) {
-  try {    
-    const session = await auth();
-  
-    if (!session?.user?.email) {
-        return ("You need to sing in first" )
-    }
-    const user = await db.user.findUnique({where: {email: session.user.email}});
-      
-      if (!user || !user.id) {
-        return ("User Not Found");
-    }
-    
-    const phones = await db.fixPhone.findUnique({
-      where: {
-        id,
-      },
-      include: {
-        creator: true
-      },
-    });
+
+if (item) {
+  await db.type.delete({
+    where: {
+      id: item.id,
+    },
+  });
+}
+
 
     
-    return phones
+    return item
   } catch (err: unknown) {
     if (err instanceof Error) return ("Error----" + err.message)
     else return "Unknown Error occurred"
