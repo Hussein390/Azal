@@ -64,26 +64,7 @@ export default function Phones({ phone, setPhone, open, collaborators, setItem }
             setPhone(prev => ({ ...prev, buyerNumber: e.target.value }));
           }} value={phone.buyerNumber} type="number" id="BuyerNumber" placeholder="Buyer Number" />
         </div>
-        <div className="grid grid-cols-2 mt-4 gap-4 w-full">
-          <div className="flex flex-col space-y-1.5">
-            <Label htmlFor="framework">النضام</Label>
-            <Select onValueChange={(value) => {
-              if (open === "Items") {
-                setItem(prev => ({ ...prev, type: value }));
-              } else if (open === "Phone") {
-                setPhone(prev => ({ ...prev, type: value }));
-              }
-            }}>
-              <SelectTrigger id="framework">
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                <SelectItem value="IOS">IOS</SelectItem>
-                <SelectItem value="Android">Android</SelectItem>
-                {open === 'Items' && <SelectItem value="Items">Items</SelectItem>}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className=" mt-4 gap-4 w-full">
           <div className="flex flex-col space-y-1.5">
             <Label htmlFor="framework">المالك</Label>
             <Select value={phone.userId} onValueChange={(value) => {

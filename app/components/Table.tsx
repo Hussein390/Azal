@@ -30,7 +30,6 @@ export default function Tables() {
   const phoneTableRef = useRef<HTMLDivElement>(null);
   const [highlightedPhoneId, setHighlightedPhoneId] = useState<string | null>(null);
   const [open, setOpen] = useState<{ [key: number]: boolean }>({});
-  const [allMoney, setAllMoney] = useState<number>(0);
   const [allItemsMoney, setAllItemsMoney] = useState<{ sellPrice: number, installmentsPrice: number, boughtPrice: number }>({ sellPrice: 0, boughtPrice: 0, installmentsPrice: 0 });
   const FilteredItems = useMemo(() => {
     const name = search.name.toLowerCase().trim();
@@ -205,25 +204,31 @@ export default function Tables() {
     getUserId()
   }, [])
 
-  const filteredTasks = Array.isArray(phones)
-    ? phones.filter(task => {
-      // if no filter selected, show all
-      if (!ownerID) return true;
-      const name = search.name.toLowerCase() === "" ? true
-        : task.buyerName!.toLowerCase().includes(search.name.toLowerCase());
-      return task.creator?.id === ownerID || ownerID === 'all-users' && name;
-    })
+  const filteredTasks = useMemo(() => {
+    if (!Array.isArray(phones)) return [];
 
+    const searchName = search.name.toLowerCase().trim();
 
-    : [];
+    return phones.filter((task) => {
+      const matchesName =
+        searchName === "" ||
+        task.buyerName?.toLowerCase().includes(searchName);
 
-  useEffect(() => {
-    const totalMoney = filteredTasks.reduce((sum, task) => {
-      return sum + Number(task.fixedCut || 0);
-    }, 0);
+      const matchesOwner =
+        !ownerID ||
+        ownerID === "all-users" ||
+        task.creator?.id === ownerID;
 
-    setAllMoney(totalMoney);
-  }, [filteredTasks])
+      return matchesOwner && matchesName;
+    });
+  }, [phones, ownerID, search.name]);
+
+  const allMoney = useMemo(() => {
+    return filteredTasks.reduce(
+      (sum, task) => sum + Number(task.fixedCut || 0),
+      0
+    );
+  }, [filteredTasks]);
 
   const totalMoney = useMemo(() => {
     return filteredTasks.reduce((sum, task) =>
@@ -247,9 +252,7 @@ export default function Tables() {
     return { boughtPrice, sellPrice, installmentsPrice };
   }, [FilteredItems]);
 
-  useEffect(() => {
-    setAllMoney(totalMoney);
-  }, [totalMoney]);
+
   useEffect(() => {
     setAllItemsMoney(totalItemsMoney);
   }, [totalItemsMoney]);

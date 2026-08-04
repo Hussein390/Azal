@@ -10,8 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 export function ItemsSearch() {
 
   const { showAlert, isPhone, setSearch, search } = DataPhones();
-  const [Types, setTypes] = React.useState<any[]>([]);
   const [AddType, setAddType] = React.useState('');
+  const [Types, setTypes] = React.useState<any[]>([]);
 
   async function fetchTypes() {
     try {

@@ -19,12 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { createItem, createPhone, getEnvironmentById, getItems, getPhone } from "../../../backend/envirnoment"
+import { createItem, createPhone, get_Types, getEnvironmentById, getItems, getPhone } from "../../../backend/envirnoment"
 import { DataPhones, ItemProps, PhoneProps } from "../dataProvider"
 import Phones from "./phones"
 
 export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }) {
-  const { setPhones, showAlert, setItems, isPhone } = DataPhones();
+  const { setPhones, showAlert, setItems, isPhone, search } = DataPhones();
   const [collaborators, setCollaborators] = React.useState([{ user: { id: '', name: '' } }]);
   const [open, setIsOpen] = React.useState("Phone");
   const [phone, setPhone] = React.useState<PhoneProps>({
@@ -206,6 +206,22 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
   React.useEffect(() => {
     getUserId()
   }, [])
+
+  // Tages
+  const [Types, setTypes] = React.useState<any[]>([]);
+
+  async function fetchTypes() {
+    try {
+      const EnvId = localStorage.getItem('envId')!;
+      const res = await get_Types(EnvId) as any[];
+      setTypes(res);
+    } catch (error) {
+      console.error('Error fetching types:', error);
+    }
+  }
+  React.useEffect(() => {
+    fetchTypes();
+  }, []);
   return (
     <Card className={` delay-50 min-w-[360px]`}>
       <CardHeader>
@@ -281,21 +297,43 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
           {open == "Items" &&
             <div className="grid grid-cols-2 mt-4 gap-4 w-full">
               <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="framework">النضام</Label>
-                <Select onValueChange={(value) => {
-                  if (open === "Items") {
-                    setItem(prev => ({ ...prev, type: value }));
-                  } else if (open === "Phone") {
-                    setPhone(prev => ({ ...prev, type: value }));
-                  }
-                }}>
+                <Label htmlFor="framework">الصنف</Label>
+                <Select>
                   <SelectTrigger id="framework">
-                    <SelectValue placeholder="Select" />
+                    <SelectValue placeholder="أختر" />
                   </SelectTrigger>
-                  <SelectContent position="popper">
-                    <SelectItem value="IOS">IOS</SelectItem>
-                    <SelectItem value="Android">Android</SelectItem>
-                    {open === 'Items' && <SelectItem value="Items">Items</SelectItem>}
+                  <SelectContent position="popper" className='w-full'>
+                    {(() => {
+                      if (!Types || Types.length === 0) {
+                        return <SelectItem value="IOS">No Types</SelectItem>;
+                      }
+
+                      // Create a unique filtered list
+                      const filtered = Types.filter(
+                        (types, index, self) =>
+                          index === self.findIndex(u => u.type === types.type)
+                      );
+                      // Render SelectItems
+                      return (<>
+                        {
+                          filtered.map(item => (
+
+                            <SelectItem
+                              key={item.id}
+                              value={item.type}
+                              className=" pr-8 "
+                            >
+                              <span>{item.type}</span>
+
+
+                            </SelectItem>
+                          ))}
+                        <SelectItem
+                          value='all'
+                          className="cursor-pointer"
+                          key={"all"}>ALL</SelectItem>
+                      </>)
+                    })()}
                   </SelectContent>
                 </Select>
               </div>
