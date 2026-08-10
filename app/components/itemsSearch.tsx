@@ -9,17 +9,28 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 export function ItemsSearch() {
 
-  const { showAlert, isPhone, setSearch, search } = DataPhones();
+  const { showAlert, setSearch, search, setLengths } = DataPhones();
   const [AddType, setAddType] = React.useState('');
   const [Types, setTypes] = React.useState<any[]>([]);
+
 
   async function fetchTypes() {
     try {
       const EnvId = localStorage.getItem('envId')!;
-      const res = await get_Types(EnvId) as any[];
-      setTypes(res);
+
+      const res = await get_Types(EnvId);
+
+      console.log("get_Types:", res);
+
+      if (Array.isArray(res)) {
+        setTypes(res);
+      } else {
+        showAlert("get_Types did not return an array:");
+        setTypes([]);
+      }
     } catch (error) {
-      console.error('Error fetching types:', error);
+      showAlert('Error fetching types:');
+      setTypes([]);
     }
   }
   React.useEffect(() => {
@@ -80,9 +91,8 @@ export function ItemsSearch() {
                     }
 
                     // Create a unique filtered list
-                    const filtered = Types.filter(
-                      (types, index, self) =>
-                        index === self.findIndex(u => u.type === types.type)
+                    const filtered = Array.from(
+                      new Map(Types.map(item => [item.type, item])).values()
                     );
                     // Render SelectItems
                     return (<>
@@ -110,6 +120,7 @@ export function ItemsSearch() {
             </div>
           </form>
 
+          <input type="number" placeholder='Length' onChange={(e) => setLengths(Number(e.target.value))} className='p-2 border border-gray-300 rounded-md my-2 w-full' />
           <div className=" py-2 mt-3">
             <input type="text" placeholder='Type' value={AddType} onChange={(e) => setAddType(e.target.value)} className='p-2 border border-gray-300 rounded-md ' />
             <button

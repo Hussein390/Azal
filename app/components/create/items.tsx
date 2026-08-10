@@ -302,10 +302,12 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
                   <SelectTrigger id="framework">
                     <SelectValue placeholder="أختر" />
                   </SelectTrigger>
-                  <SelectContent position="popper" className='w-full'>
+                  <SelectContent position="popper" className='w-full' onChange={(e) => {
+                    // setItem(prev => ({ ...prev, text: e }));
+                  }}>
                     {(() => {
                       if (!Types || Types.length === 0) {
-                        return <SelectItem value="IOS">No Types</SelectItem>;
+                        return <SelectItem value="IOS">No Tages</SelectItem>;
                       }
 
                       // Create a unique filtered list

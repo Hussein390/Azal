@@ -7,6 +7,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+
 } from "@/components/ui/table"
 import { deleteItem, getEnvironmentById, getItems, getPhone, updateItem } from '../../backend/envirnoment'
 import { DataPhones, ItemProps, PhoneProps } from './dataProvider'
@@ -25,11 +26,15 @@ type UpdateState = {
   type?: string;
 };
 export default function Tables() {
-  const { showAlert, phones, setPhones, search, setIsPhone, isPhone, items, setItems, EnvironmentName } = DataPhones();
+  const { showAlert, phones, setPhones, lengths, search, setIsPhone, isPhone, items, setItems, EnvironmentName } = DataPhones();
   const router = useRouter()
   const phoneTableRef = useRef<HTMLDivElement>(null);
   const [highlightedPhoneId, setHighlightedPhoneId] = useState<string | null>(null);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [open, setOpen] = useState<{ [key: number]: boolean }>({});
+  const [openCheck, setOpenCheck] = useState<boolean>(false);
+
+
   const [allItemsMoney, setAllItemsMoney] = useState<{ sellPrice: number, installmentsPrice: number, boughtPrice: number }>({ sellPrice: 0, boughtPrice: 0, installmentsPrice: 0 });
   const FilteredItems = useMemo(() => {
     const name = search.name.toLowerCase().trim();
@@ -41,13 +46,13 @@ export default function Tables() {
         task.itemName.toLowerCase().includes(name);
 
       const matchesType =
-        type === "" ||
-        type === "all" ||
-        task.type?.toLowerCase() === type;
+        type === "" && Number(task.length) >= lengths ||
+        type === "all" && Number(task.length) >= lengths ||
+        task.type?.toLowerCase() === type && Number(task.length) >= lengths;
 
       return matchesName && matchesType;
     });
-  }, [items, search.name, search.type]);
+  }, [items, search.name, search.type, lengths]);
   const [isUpdate, setIsUpdate] = useState<{ [key: number]: boolean }>({});
   const [update, setUpdate] = useState<UpdateState>({});
   const USER = typeof window !== "undefined"
@@ -230,35 +235,67 @@ export default function Tables() {
     );
   }, [filteredTasks]);
 
-  const totalMoney = useMemo(() => {
-    return filteredTasks.reduce((sum, task) =>
-      sum + Number(task.fixedCut || 0),
-      0);
-  }, [filteredTasks]);
 
-  const totalItemsMoney = useMemo(() => {
-    const boughtPrice = FilteredItems.reduce((sum, task) =>
-      sum + (Number(task.boughtPrice) || 0) * (Number(task.length) || 0),
-      0);
-
-    const sellPrice = FilteredItems.reduce((sum, task) =>
-      sum + (Number(task.sellPrice) || 0) * (Number(task.length) || 0),
-      0);
-
-    const installmentsPrice = FilteredItems.reduce((sum, task) =>
-      sum + (Number(task.installmentPrice) || 0) * (Number(task.length) || 0),
-      0);
-
-    return { boughtPrice, sellPrice, installmentsPrice };
-  }, [FilteredItems]);
 
 
   useEffect(() => {
-    setAllItemsMoney(totalItemsMoney);
-  }, [totalItemsMoney]);
+    const checkedItems = openCheck ? FilteredItems.filter((item) =>
+      selectedItems.has(item.id!)
+    ) : FilteredItems;
+
+    const boughtPrice = checkedItems.reduce(
+      (sum, task) =>
+        sum + (Number(task.boughtPrice) || 0) * (Number(task.length) || 0),
+      0
+    );
+
+    const sellPrice = checkedItems.reduce(
+      (sum, task) =>
+        sum + (Number(task.sellPrice) || 0) * (Number(task.length) || 0),
+      0
+    );
+
+    const installmentsPrice = checkedItems.reduce(
+      (sum, task) =>
+        sum +
+        (Number(task.installmentPrice) || 0) * (Number(task.length) || 0),
+      0
+    );
+
+    const all = { boughtPrice, sellPrice, installmentsPrice };
+    setAllItemsMoney(all)
+  }, [FilteredItems, selectedItems, openCheck]);
 
 
 
+
+  // Items Checks
+  const togglePhone = (id: string, checked: boolean) => {
+    setSelectedItems((prev) => {
+      const next = new Set(prev);
+
+      if (checked) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+
+      return next;
+    });
+  };
+  useEffect(() => {
+    setSelectedItems((prev) => {
+      const next = new Set(prev);
+
+      FilteredItems.forEach((item) => {
+        if (Number(item.length) === 0) {
+          next.delete(item.id!);
+        }
+      });
+
+      return next;
+    });
+  }, [FilteredItems]);
 
   // get Phones or Items
   async function getPhones() {
@@ -500,6 +537,10 @@ export default function Tables() {
         ref={phoneTableRef}
         className="mx-auto max-h-[650px] overflow-y-auto relative w-full"
         style={{ scrollbarWidth: 'none' }}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          setOpenCheck(prev => !prev)
+        }}
       >
         {isPhone === "Phone" ? <Table>
           <TableHeader>
@@ -514,7 +555,8 @@ export default function Tables() {
               <TableHead className="text-right">Owned</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody
+          >
             {(Array.isArray(phones) && phones.length > 0) ?
               Array.isArray(phones) && filteredTasks.map((phone, index) => (
 
@@ -538,6 +580,7 @@ export default function Tables() {
                   }}
                   key={phone.id}
                 >
+
                   <TableCell className="font-medium w-3">{index + 1}</TableCell>
                   <TableCell className="font-medium">{phone.phoneName}</TableCell>
                   <TableCell>{phone.price}</TableCell>
@@ -580,7 +623,19 @@ export default function Tables() {
                 FilteredItems.map((item, index) => (
 
                   <TableRow className="cursor-pointer select-none text-center relative" onDoubleClick={() => setOpen(prev => ({ ...prev, [index]: !prev[index] }))} key={index}>
-                    <TableCell className="font-medium w-3">{index + 1}</TableCell>
+                    <TableCell className="font-medium w-3 relative">
+                      {openCheck && <div className="absolute top-5 left-2  space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedItems.has(item.id!)}
+                          onChange={(e) =>
+                            togglePhone(item.id!, e.target.checked)
+                          }
+                          onClick={(e) => e.stopPropagation()}
+                          className='size-5 '
+                        />
+                      </div>}
+                      {index + 1}</TableCell>
                     <TableCell className="font-medium text-left">{item.itemName}</TableCell>
                     <TableCell className='text-blue-600'>{item.boughtPrice}</TableCell>
                     <TableCell className="font-sans font-semibold relative text-green-600">

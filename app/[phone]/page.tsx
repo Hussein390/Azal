@@ -257,7 +257,7 @@ export default function page({ params }: { params: Promise<{ phone: string }> })
         </Dialog>
       </div>
       <div className=" flex items-center justify-between ">
-        <p className="font-sans font-semibold ">تحيه طيبه من مركز <span className='text-blue-700'>الأزل</span></p>
+        <p className="font-sans font-semibold ">تحيه طيبه من مركز <span className='text-blue-700'>أزل</span></p>
         <p className="font-sans font-semibold ">تاريخ الوصل : <span className='text-blue-700'>{formattedDate}</span></p>
         <p className="font-sans font-semibold "> رقم المركز: <span className='text-blue-600 mr-2'>07716701849</span> </p>
       </div>

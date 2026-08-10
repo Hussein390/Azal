@@ -54,6 +54,8 @@ type IsOpenContextType = {
   setSearch: Dispatch<SetStateAction<{ name: string, type: string }>>,
   phones: PhoneProps[];
   setPhones: Dispatch<SetStateAction<PhoneProps[]>>;
+  lengths: number;
+  setLengths: Dispatch<SetStateAction<number>>;
   items: ItemProps[];
   setItems: Dispatch<SetStateAction<ItemProps[]>>;
   isPhone: string;
@@ -93,6 +95,8 @@ const DataContext = createContext<IsOpenContextType>({
   setItems: () => { },
   isPhone: '',
   setIsPhone: () => "Phone",
+  lengths: 0,
+  setLengths: () => 0,
   showAlert: () => { },
   setIsPriced: () => { },
   isPriced: [],
@@ -116,6 +120,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const [alertMessage, setAlertMessage] = React.useState<string | null>(null);
   const [alertSuccessMessage, setAlertSuccessMessage] = React.useState<string | null>(null);
   const [isPriced, setIsPriced] = useState<isPaidProps[]>([]);
+  const [lengths, setLengths] = useState<number>(0);
   const [EnvironmentName, setEnvironmentName] = useState<envirnomentProps>({
     id: '',
     name: '',
@@ -155,7 +160,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <DataContext.Provider value={{ EnvironmentName, isPriced, setIsPriced, search, setSearch, phones, setPhones, setItems, items, isPhone, setIsPhone, showAlert }}>
+    <DataContext.Provider value={{ EnvironmentName, isPriced, lengths, setLengths, setIsPriced, search, setSearch, phones, setPhones, setItems, items, isPhone, setIsPhone, showAlert }}>
       {children}
       {(alertMessage || alertSuccessMessage) && (
         <div className={`fixed top-16 right-3 outline-2 ${alertSuccessMessage ? 'outline-green-600' : 'outline-red-600'}  outline rounded-md`}>
