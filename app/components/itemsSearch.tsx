@@ -92,7 +92,11 @@ export function ItemsSearch() {
 
                     // Create a unique filtered list
                     const filtered = Array.from(
-                      new Map(Types.map(item => [item.type, item])).values()
+                      new Map(
+                        Types
+                          .filter(item => item.type && item.type.trim() !== "")
+                          .map(item => [item.type, item])
+                      ).values()
                     );
                     // Render SelectItems
                     return (<>
@@ -122,7 +126,7 @@ export function ItemsSearch() {
 
           <input type="number" placeholder='Length' onChange={(e) => setLengths(Number(e.target.value))} className='p-2 border border-gray-300 rounded-md my-2 w-full' />
           <div className=" py-2 mt-3">
-            <input type="text" placeholder='Type' value={AddType} onChange={(e) => setAddType(e.target.value)} className='p-2 border border-gray-300 rounded-md ' />
+            <input type="text" placeholder='Create|Delete Tag' value={AddType} onChange={(e) => setAddType(e.target.value)} className='p-2 border border-gray-300 rounded-md ' />
             <button
               onClick={async () => {
                 const EnvId = localStorage.getItem('envId')!;

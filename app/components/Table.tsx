@@ -420,6 +420,7 @@ export default function Tables() {
       id: item.id,
     };
     await deleteItem(object)
+    showAlert(`Item Deleted Successfully`, false);
     setOpen(prev => ({ ...prev, [index]: false }))
     await getPhones()
   }

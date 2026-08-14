@@ -1164,6 +1164,9 @@ export async function createType({ type, environmentId}: createTypeProps) {
     if (environment.ownerId !== user.id && !isCollaborator || isCollaborator?.role === 'VIEWER') {
       return new Error("You are not allowed to create");
     }
+    if (!type || type.trim() === "") {
+  return new Error("Type cannot be empty");
+}
     const existingType = await db.type.findFirst({
   where: {
     type,

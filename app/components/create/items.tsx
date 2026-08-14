@@ -298,13 +298,19 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
             <div className="grid grid-cols-2 mt-4 gap-4 w-full">
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="framework">الصنف</Label>
-                <Select>
+                <Select
+                  value={item.type}
+                  onValueChange={(value) => {
+                    setItem(prev => ({
+                      ...prev,
+                      type: value,
+                    }));
+                  }}
+                >
                   <SelectTrigger id="framework">
                     <SelectValue placeholder="أختر" />
                   </SelectTrigger>
-                  <SelectContent position="popper" className='w-full' onChange={(e) => {
-                    // setItem(prev => ({ ...prev, text: e }));
-                  }}>
+                  <SelectContent position="popper" className='w-full'>
                     {(() => {
                       if (!Types || Types.length === 0) {
                         return <SelectItem value="IOS">No Tages</SelectItem>;
@@ -312,8 +318,11 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
 
                       // Create a unique filtered list
                       const filtered = Types.filter(
-                        (types, index, self) =>
-                          index === self.findIndex(u => u.type === types.type)
+                        (type, index, self) =>
+                          type.type?.trim() !== "" &&
+                          index === self.findIndex(
+                            (t) => t.type === type.type
+                          )
                       );
                       // Render SelectItems
                       return (<>
@@ -363,7 +372,7 @@ export function ItemsCreate({ setOpen }: { setOpen: (b: string | null) => void }
         <Button variant="outline" onClick={() => setOpen(null)}>Cancel</Button>
         <Button onClick={() => open === "Phone" ? CREATE_PHONE() : open === 'Items' ? CREATE_ITEMS() : ''}>Create</Button>
       </CardFooter>
-    </Card>
+    </Card >
   );
 }
 
